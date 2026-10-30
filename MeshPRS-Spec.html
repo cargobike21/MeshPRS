@@ -1,0 +1,2520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MeshPRS 1.0 Candidate</title>
+<style>
+:root{--bg:#fbfaf7;--paper:#fff;--ink:#1d2228;--muted:#5d6672;--line:#d7d3ca;--soft:#f2efe8;--code:#f4f2ec;--accent:#1f5f8b;--accent-bg:#e7f0f7;--must:#8a2d1f}
+@media (prefers-color-scheme:dark){:root{--bg:#14171b;--paper:#1b1f24;--ink:#e4e7eb;--muted:#9aa3ae;--line:#353b43;--soft:#22272d;--code:#20252b;--accent:#7db4de;--accent-bg:#1c2b38;--must:#f08a77}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.6 Georgia,"Iowan Old Style","Palatino Linotype",serif}
+main{max-width:920px;margin:0 auto;padding:28px 16px 80px;background:var(--paper);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+@media (min-width:960px){main{padding:40px 56px 90px}}
+.titleblock{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:22px}
+.series{font:600 .78rem/1.4 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:2rem;line-height:1.15;margin:8px 0 12px}
+.meta{display:grid;grid-template-columns:max-content 1fr;gap:2px 14px;font:.9rem/1.5 system-ui,sans-serif;margin:0}
+.meta dt{color:var(--muted)} .meta dd{margin:0}
+.badge{display:inline-block;font:700 .75rem system-ui,sans-serif;letter-spacing:.08em;color:var(--accent);border:1.5px solid var(--accent);padding:1px 8px;border-radius:3px;margin-top:12px}
+h2{font-size:1.35rem;margin:42px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:1.08rem;margin:26px 0 6px} h4{font:600 .95rem system-ui,sans-serif;margin:18px 0 4px}
+p{margin:9px 0} a{color:var(--accent)}
+code,pre{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.86em}
+code{background:var(--code);padding:1px 4px;border-radius:3px;overflow-wrap:anywhere}
+pre{background:var(--code);border:1px solid var(--line);border-radius:4px;padding:10px 12px;overflow-x:auto;line-height:1.45}
+pre code{background:none;padding:0;overflow-wrap:normal}
+.kw{font:700 .82em system-ui,sans-serif;letter-spacing:.03em;color:var(--must)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font:.88rem/1.45 system-ui,sans-serif}
+th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600}
+ul,ol{padding-left:24px;margin:8px 0} li{margin:3px 0}
+hr{display:none}
+.status{border-left:3px solid var(--accent);background:var(--accent-bg);padding:8px 14px;margin:14px 0;font-size:.95rem}
+.toc{columns:2;column-gap:32px;font:.9rem/1.6 system-ui,sans-serif;background:var(--soft);padding:12px 18px;border-radius:4px}
+.toc a{text-decoration:none;color:var(--ink)} .toc a:hover{color:var(--accent)}
+.toc ol{list-style:none;padding:0;margin:0} .toc li{break-inside:avoid;margin:0}
+@media (max-width:640px){.toc{columns:1}}
+footer{margin-top:50px;border-top:1px solid var(--line);padding-top:12px;font:.82rem system-ui,sans-serif;color:var(--muted)}
+@media print{body{background:#fff;font-size:11pt} main{border:0;max-width:none;padding:0} h2{break-after:avoid} table{break-inside:avoid} a{color:inherit;text-decoration:none}}
+</style>
+</head>
+<body>
+<main>
+<div class="titleblock">
+  <div class="series">Amateur interface standard · 1.0 Candidate · open for comment</div>
+  <h1>MeshPRS: APRS ↔ MeshCore Interface Standard</h1>
+  <dl class="meta"><dt>Document</dt><dd>MeshPRS 1.0 Candidate</dd><dt>Date</dt><dd>30 October 2026</dd><dt>Editor</dt><dd>Alec Swinton, VK4AZ</dd><dt>Frame version</dt><dd>1 (layout frozen; version 0 accepted until 1.0 final)</dd><dt>Identifiers</dt><dd>MeshCore channel <code>#meshprs</code>, GRP_DATA type <code>0xFF4D</code>, tocall <code>APZKPG</code></dd><dt>Licence</dt><dd>Text CC BY 4.0; test vectors CC0 1.0</dd></dl>
+  <span class="badge">1.0 CANDIDATE · LAYOUT FROZEN · OPEN FOR COMMENT</span>
+</div>
+<div class="status"><p><strong>1.0 Candidate</strong> (2026-10-30), open for public comment. The frame layout is frozen at header version 1 (§9.3). 1.0 final follows the field trial and review (decision <a href="spec/decisions/0020-publish-1-0-candidate.md">0020</a>), with clarifications only in between. Every choice in this document has a decision record in <a href="spec/decisions">decisions/</a>; §16 lists them, with the work left for later versions. <code>Qn</code> refers to <a href="OPEN-QUESTIONS.md">OPEN-QUESTIONS.md</a>, where each question names the decision that answered it. Facts cited as "F§n" are in <a href="research/00-findings.md">research/00-findings.md</a>.</p></div>
+<nav class="toc" aria-label="Contents"><ol><li><a href="#1-introduction">1. Introduction</a></li><li><a href="#2-terminology">2. Terminology</a></li><li><a href="#3-architecture-tiers-and-gateway-roles">3. Architecture, tiers and gateway roles</a></li><li><a href="#4-identity-and-trust">4. Identity and trust</a></li><li><a href="#5-position-subtype-0x00">5. Position (subtype 0x00)</a></li><li><a href="#6-messaging">6. Messaging</a></li><li><a href="#7-telemetry-subtype-0x03">7. Telemetry (subtype 0x03)</a></li><li><a href="#8-weather-objects-neighbours-and-status">8. Weather, objects, neighbours and status</a></li><li><a href="#9-frame-format-encodings-and-limits">9. Frame format, encodings and limits</a></li><li><a href="#10-gateway-behaviour">10. Gateway behaviour</a></li><li><a href="#11-aprs-is-specifics">11. APRS-IS specifics</a></li><li><a href="#12-mesh-side-specifics">12. Mesh-side specifics</a></li><li><a href="#13-regulatory-considerations">13. Regulatory considerations</a></li><li><a href="#14-security-and-privacy-considerations">14. Security and privacy considerations</a></li><li><a href="#15-conformance">15. Conformance</a></li><li><a href="#16-open-questions">16. Open questions</a></li><li><a href="#annex-a-verification-of-the-examples">Annex A: Verification of the examples</a></li><li><a href="#annex-b-field-mapping-tables">Annex B: Field mapping tables</a></li><li><a href="#annex-c-tier-b-future-work-needing-meshcore-firmware-changes">Annex C: Tier B: future work needing MeshCore firmware changes</a></li></ol></nav>
+<p>The key words <span class="kw">MUST</span>, <span class="kw">MUST NOT</span>, <span class="kw">SHOULD</span>, <span class="kw">SHOULD NOT</span> and <span class="kw">MAY</span> are to be read as in RFC 2119.</p>
+<p><strong>Reading order:</strong> §9 (frame format) defines the common header that every subtype in §5-8 starts with.</p>
+<hr />
+<h2 id="1-introduction">1. Introduction</h2>
+<h3 id="11-purpose">1.1 Purpose</h3>
+<p>APRS (APRS-IS and RF) and MeshCore (a LoRa mesh on 915-928 MHz LIPD in Australia) both carry station positions, short messages and telemetry, with no common rules between them. Without rules, gateways flood each side with the other's traffic, loop packets back, and put duplicate or unverified stations on aprs.fi. MeshPRS defines:</p>
+<ul>
+<li>a compact binary frame for APRS-style information on a MeshCore mesh (Tier A, stock firmware);</li>
+<li>a human-readable text fallback for stock phone apps (§9.7);</li>
+<li>how a gateway converts between those frames and APRS, and the rules that keep the two networks from flooding, looping or breaking either side's licence conditions.</li>
+</ul>
+<p>The name stands for <em>Mesh Position Reporting System</em> (decision <a href="spec/decisions/0014-name.md">0014</a>).</p>
+<h3 id="12-scope">1.2 Scope</h3>
+<p><strong>Kept from APRS:</strong> the station model (callsign-SSID), position reports with symbols and comments, messages with IDs and acks, bulletins, objects and items, telemetry (T#, PARM, UNIT, EQNS, BITS), weather, status, and queries.</p>
+<p><strong>Dropped:</strong> AX.25 addressing (the mesh frame carries one source callsign and, where needed, one addressee, nothing else), digipeater paths and <code>WIDEn-N</code> aliases (the mesh does its own flooding), KISS and HDLC framing, the AX.25 destination field as a carrier of data (Mic-E), and the q-construct on the mesh side.</p>
+<p><strong>Out of scope:</strong></p>
+<ul>
+<li>tunnelling raw AX.25 frames or TNC2 lines through the mesh;</li>
+<li>gating to or from amateur RF (VHF 145.175 MHz, LoRa APRS 433.775 MHz) (decisions <a href="spec/decisions/0003-regulatory-rules.md">0003</a>, <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>);</li>
+<li>Meshtastic, which may get a sister profile later (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>);</li>
+<li>anything that needs modified MeshCore firmware (Tier B, Annex C).</li>
+</ul>
+<p>Which subtypes 1.0 requires is in §15 (decision <a href="spec/decisions/0007-scope-1-0.md">0007</a>). Every subtype in decision <a href="spec/decisions/0002-subtype-table.md">0002</a> is fully defined, required or not.</p>
+<h3 id="13-profile-0-the-advert-profile">1.3 Profile 0 (the advert profile)</h3>
+<p>Kelly Page's receive-only iGate (<code>kelly-page/js/igate.js</code>, released in Kelly 0.4.34) gates MeshCore <strong>adverts</strong> from whitelisted keys to APRS-IS as <code>CALL-SSID&gt;APZKPG,qAO,IGATECALL:!DDMM.mmS/DDDMM.mmE&gt;comment</code>. MeshPRS calls this <strong>profile 0</strong>, the advert profile. The name is chosen so it does not clash with header version 0 (§9.3).</p>
+<p>Profile 0 stays valid (§5.4), and this specification stays compatible with it: same tocall, q-construct, position text format, gate order and drop-reason model.</p>
+<hr />
+<h2 id="2-terminology">2. Terminology</h2>
+<ul>
+<li><strong>APRS side:</strong> APRS-IS. APRS RF is out of scope (§1.2).</li>
+<li><strong>Mesh side:</strong> a MeshCore network with the settings in §12.</li>
+<li><strong>Station:</strong> a MeshCore node (normally a companion with a phone or PC app) that sends or receives MeshPRS frames under an amateur callsign.</li>
+<li><strong>Gateway:</strong> software that moves information between the APRS side and the mesh side. An <strong>iGate</strong> is a gateway that carries mesh → APRS-IS only (receive-only, <code>qAO</code>). Roles are in §3.</li>
+<li><strong>Frame:</strong> one MeshPRS unit: the <strong>blob</strong> of one GRP_DATA packet (§9.1), or the text of one GRP_TXT packet in the compact text profile (§9.7).</li>
+<li><strong>Subtype:</strong> byte 1 of a frame. It selects the service (decision <a href="spec/decisions/0002-subtype-table.md">0002</a>, §9.4).</li>
+<li><strong>MeshPRS channel:</strong> the MeshCore group channel that carries MeshPRS frames (§12.1).</li>
+<li><strong>Node key:</strong> a MeshCore Ed25519 public key (32 bytes). A <strong>key prefix</strong> is its first <em>n</em> bytes. A <strong>path hash</strong> is its first 1, 2 or 3 bytes; SEQ uses 2 (F§1.1).</li>
+<li><strong>Binding:</strong> a gateway's record that a callsign-SSID belongs to a node key (§4.3).</li>
+<li><strong>Tier A:</strong> what works on stock MeshCore 1.18.0 firmware, with app or gateway changes only. <strong>Tier B:</strong> what would need firmware changes (Annex C).</li>
+<li><strong>N:</strong> the blob length in bytes. <strong>On-air size:</strong> the whole LoRa packet, header to MAC and ciphertext (§9.2).</li>
+</ul>
+<hr />
+<h2 id="3-architecture-tiers-and-gateway-roles">3. Architecture, tiers and gateway roles</h2>
+<pre><code> MeshCore station                MeshCore mesh (LIPD, 923.125 MHz)          Gateway                 APRS-IS
+ (app + stock companion)  --GRP_DATA flood, MeshPRS channel--&gt;  repeaters  --&gt;  decode, trust,  --qAO--&gt;  aunz.aprs2.net
+                          &lt;--GRP_DATA (G=1), messages only----  repeaters  &lt;--  IS-&gt;mesh rules  &lt;--filter-
+</code></pre>
+<h3 id="31-tiers">3.1 Tiers</h3>
+<ul>
+<li><strong>Tier A</strong> (normative): GRP_DATA on the MeshPRS channel, sent with the companion's <code>CMD_SEND_CHANNEL_DATA</code>, with the compact GRP_TXT text profile (§9.7) as the fallback for stock phone apps. Stock repeaters flood both without decrypting them (F§2, F§2.1; decision <a href="spec/decisions/0001-tier-a-carrier-grp-data.md">0001</a>).</li>
+<li><strong>Tier B</strong> (optional, informative): Annex C.</li>
+</ul>
+<h3 id="32-gateway-roles">3.2 Gateway roles</h3>
+<p>There are three gateway roles (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>). One box <span class="kw">MAY</span> hold several.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Mesh → APRS-IS</th>
+<th>APRS-IS → mesh</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>iGate</strong> (receive-only)</td>
+<td>Positions, objects, weather, telemetry, status, bulletins, messages and acks from bound stations</td>
+<td>Nothing</td>
+<td>Today's Kelly iGate role. <code>qAO</code> (§11)</td>
+</tr>
+<tr>
+<td><strong>Messaging gateway</strong></td>
+<td>As the iGate</td>
+<td>Messages and acks addressed to stations heard on the mesh, sent direct only, never flooded (§6.5)</td>
+<td>Acks are end-to-end (§6.5)</td>
+</tr>
+<tr>
+<td><strong>Object server</strong></td>
+<td>Objects it owns (repeaters, EOCs, evacuation centres)</td>
+<td>Nothing</td>
+<td>§8.2</td>
+</tr>
+</tbody>
+</table></div>
+<p>A gateway <span class="kw">MUST NOT</span> carry anything onto the mesh that this section does not list for its role. In particular, a gateway <span class="kw">MUST NOT</span> put general APRS-IS positions onto the mesh (no IS → mesh flooding).</p>
+<hr />
+<h2 id="4-identity-and-trust">4. Identity and trust</h2>
+<h3 id="41-callsign-encoding">4.1 Callsign encoding</h3>
+<p>Every callsign in a frame (source, addressee, ack target, query target) is a <strong>6-byte base-40 callsign</strong>:</p>
+<ul>
+<li><strong>Alphabet:</strong> value 0 = space (padding), 1-26 = <code>A</code>-<code>Z</code>, 27-36 = <code>0</code>-<code>9</code>, 37 = <code>-</code>, 38 = <code>/</code>, 39 = <code>.</code>.</li>
+<li><strong>Value:</strong> <code>Σ c[i]·40^i</code> for the characters <code>c[0]..c[k-1]</code> of the text, first character least significant, so the padding never appears in the value.</li>
+<li><strong>Storage:</strong> the value as a 48-bit <strong>big-endian</strong> unsigned integer.</li>
+<li><strong>Range:</strong> 1-9 characters, so values are below 40⁹ = 262,144,000,000,000 &lt; 2⁴⁸. A receiver <span class="kw">MUST</span> reject a callsign field whose value is 0 or ≥ 40⁹.</li>
+</ul>
+<p>This is the M17 address encoding, chosen so implementations can reuse M17 code and so the full APRS-IS callsign shape (up to 9 characters, alphanumeric SSID) fits in 6 bytes.</p>
+<ul>
+<li><strong>Verified</strong> against the M17 specification (github.com/M17-Project/M17_spec, <code>M17_spec.tex</code> Appendix "Address Encoding", commit <code>d3995d3</code>, 2026-10-16): the same 40-character alphabet in the same order, the first character in the least significant position, and the 6-byte address stored big-endian ("network byte order").</li>
+<li><strong>Check:</strong> the script reproduces M17's own worked example, <code>AB1CD</code> = <code>0x9FDD51</code>.</li>
+<li><strong>Divergences:</strong> M17 also defines <code>0xFFFFFFFFFFFF</code> as BROADCAST and <code>0xEE6B28000000</code>-<code>0xFFFFFFFFFFFE</code> as an application range. MeshPRS rejects all values ≥ 40⁹ instead.</li>
+<li><strong>Byte order:</strong> it is the one big-endian field in MeshPRS; every other multi-byte integer is little-endian, like MeshCore's own. Big-endian is kept so the bytes match M17 exactly.</li>
+</ul>
+<p>Examples (verified by script): <code>VK4ABC</code> = <code>00 00 12 9F 5D 8E</code>; <code>VK4AZ-9</code> = <code>00 23 3A DD DD 8E</code>.</p>
+<h3 id="42-callsign-rules">4.2 Callsign rules</h3>
+<ul>
+<li>A station <span class="kw">MUST</span> use its own amateur callsign as the source. The SSID <span class="kw">SHOULD</span> be numeric 1-15. <code>-0</code> <span class="kw">MUST NOT</span> be used; no SSID is allowed.</li>
+<li>Before gating to APRS-IS, a gateway <span class="kw">MUST</span> check that the source is a valid APRS-IS callsign: at most 9 characters, an amateur base callsign (Kelly's <code>validBase</code>: 1-3 prefix characters, a digit, 1-4 letters, at most 6 in all), then optionally <code>-</code> and a 1-2 character alphanumeric SSID (F§4.1). A gateway <span class="kw">MUST</span> drop a frame that fails (<code>bad callsign</code>).</li>
+<li>Frames injected from APRS-IS (G = 1, §9.3) carry the APRS source unchanged. It can be any valid APRS-IS callsign up to 9 characters, including alphanumeric SSIDs.</li>
+<li>APRS RF needs a numeric SSID 0-15. That only matters once a later version brings RF gating into scope.</li>
+</ul>
+<h3 id="43-binding-a-callsign-to-a-node-key">4.3 Binding a callsign to a node key</h3>
+<p>A GRP_DATA packet carries no sender identity: only a 1-byte channel hash in the clear, then ciphertext under a key anyone can derive (F§1.5). The callsign in a frame is therefore <strong>self-asserted</strong>. MeshPRS ties it to a node key like this:</p>
+<ol>
+<li><strong>Key prefix in the frame.</strong> A station whose frames are to be gated to APRS-IS <span class="kw">MUST</span> set the header's K flag (decision <a href="spec/decisions/0004-key-prefix-required-for-gating.md">0004</a>); other stations <span class="kw">SHOULD</span> and include the <strong>first 4 bytes of its own node key</strong> (§9.3). The first 1-3 of those bytes equal the station's path hash, so a gateway can cross-check against adverts and paths.</li>
+<li><strong>Binding at the gateway.</strong> A gateway keeps bindings of callsign-SSID → full node key. Each gateway keeps its own bindings, from its owner's list and from a club-signed list (decision <a href="spec/decisions/0005-trust-lists.md">0005</a>).</li>
+<li><strong>Gate rule.</strong> A gateway <span class="kw">MUST NOT</span> gate a frame to APRS-IS unless the source callsign is bound to a node key and the frame's key prefix matches that key (drop reasons <code>untrusted</code>, <code>no key</code>, <code>key mismatch</code>). A frame without K is therefore mesh-only. This is default deny, as in profile 0, and finding R2 (F§5.5).</li>
+<li><strong>Not authentication.</strong> A 4-byte prefix is public: anyone who has heard a station's advert can copy the prefix along with the callsign. The prefix catches misconfiguration and casual spoofing only. Real proof needs a signature. An Ed25519 signature is 64 bytes, which would roughly triple a position frame. 1.0 defines no signed frame: trust rests on the gateway's bindings (decision <a href="spec/decisions/0026-signatures-later.md">0026</a>). A later signed frame would take a subtype from the reserved range.</li>
+<li>A gateway <span class="kw">MAY</span> also require that it has heard an advert from the bound key recently (for example within 24 hours) before gating that station's frames.</li>
+</ol>
+<hr />
+<h2 id="5-position-subtype-0x00">5. Position (subtype 0x00)</h2>
+<h3 id="51-layout">5.1 Layout</h3>
+<p>After the common header (§9.3: 9 bytes, or 13 with K):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Units / scaling</th>
+<th>Range / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lat</td>
+<td>i24 LE</td>
+<td>3</td>
+<td>degrees = v × 90 / 2²³</td>
+<td>−90 to +89.99999°. Resolution 1.07×10⁻⁵° ≈ 1.19 m</td>
+</tr>
+<tr>
+<td>lon</td>
+<td>i24 LE</td>
+<td>3</td>
+<td>degrees = v × 180 / 2²³</td>
+<td>−180 to +179.99998°. Resolution 2.15×10⁻⁵° ≈ 2.39 m at the equator</td>
+</tr>
+<tr>
+<td>symbol</td>
+<td>2 × ASCII</td>
+<td>2</td>
+<td>APRS symbol table/overlay, then symbol code</td>
+<td>Table <code>/</code>, <code>\</code>, or overlay <code>0</code>-<code>9</code> <code>A</code>-<code>Z</code>. Code 0x21-0x7E</td>
+</tr>
+<tr>
+<td>pflags</td>
+<td>u8</td>
+<td>1</td>
+<td>bit 0 ALT, bit 1 CSE, bit 2 TS, bits 3-5 ambiguity 0-4 (5-7 reserved), bit 6 MSG, bit 7 reserved</td>
+<td></td>
+</tr>
+<tr>
+<td>alt</td>
+<td>i16 LE</td>
+<td>2 if ALT</td>
+<td>metres</td>
+<td>−32768 to 32767</td>
+</tr>
+<tr>
+<td>course</td>
+<td>u8</td>
+<td>1 if CSE</td>
+<td>degrees = v × 360 / 256 (0 = north)</td>
+<td>1.4° steps</td>
+</tr>
+<tr>
+<td>speed</td>
+<td>u8</td>
+<td>1 if CSE</td>
+<td>km/h</td>
+<td>0-254; 255 = 255 km/h or more</td>
+</tr>
+<tr>
+<td>ts</td>
+<td>u32 LE</td>
+<td>4 if TS</td>
+<td>sender's Unix time, s</td>
+<td>Informative only (§5.3)</td>
+</tr>
+<tr>
+<td>comment</td>
+<td>ASCII</td>
+<td>rest of blob</td>
+<td>printable 0x20-0x7E, no <code>\|</code> or <code>~</code></td>
+<td>0-43 bytes. The gateway truncates to fit APRS (§10.3)</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>MSG</strong> set means the station can receive MeshPRS messages. The gateway then uses APRS <code>=</code> instead of <code>!</code>.</li>
+<li><strong>Ambiguity</strong> follows APRS (F§4.5; Kelly <code>fmt</code>): 1-4 blank the hundredths, tenths, units and tens of minutes. A sender that sets ambiguity <span class="kw">SHOULD</span> also round lat/lon itself, because a gateway that is not MeshPRS-aware would show the full precision.</li>
+<li><strong>Precision vs bytes:</strong> 24-bit lat/lon gives about 1-2 m, already better than APRS's uncompressed 0.01′ (≈18 m), in 6 bytes against the 8 of an advert's int32 × 10⁻⁶. Position pflags bit 7 stays reserved, so that a later version can signal a higher-precision position (decision <a href="spec/decisions/0021-wire-format-fixed.md">0021</a>).</li>
+<li><strong>Size budget.</strong> A full-length 43-byte comment is allowed, but it costs a frame of up to N = 73 (5 blocks).<ul>
+<li>A station beaconing with its normal settings (K set, the options it uses) <span class="kw">MUST</span> keep N ≤ 45. With K and no options, that is a comment of at most 23 bytes; with K and every option, 15.</li>
+<li>It <span class="kw">SHOULD</span> keep N ≤ 29, which allows a 7-byte comment with K and no options, or 11 without K.</li>
+<li>A longer comment <span class="kw">SHOULD</span> be sent only occasionally, for example on every 10th beacon or after a change.</li>
+</ul>
+</li>
+<li><strong>Encoding (stations):</strong> <code>v = sign(x) · ⌊|x| · 2²³ / 90 + 0.5⌋</code> for latitude (<code>/ 180</code> for longitude): round half away from zero, clamped to the i24 range. −27.4680 encodes to −2560203.</li>
+</ul>
+<h3 id="52-worked-example-required">5.2 Worked example (required)</h3>
+<p>VK4ABC at −27.4680, 153.0235, car symbol <code>/&gt;</code>, comment "Mobile", K set, seq 0x2A. The node key is illustrative: its prefix comes from <code>sha256("MeshPRS illustrative node key VK4ABC")</code>.</p>
+<pre><code>00: 50 00 2A 00 00 12 9F 5D 8E 02 F9 52 3D 35 EF D8
+10: 14 D1 6C 2F 3E 00 4D 6F 62 69 6C 65
+</code></pre>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Bytes</th>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>50</code></td>
+<td>header</td>
+<td>version 1, G 0, K 1, gating 0, retry 0. A first retry would be <code>51</code>, with every other byte the same</td>
+</tr>
+<tr>
+<td><code>00</code></td>
+<td>subtype</td>
+<td>Position</td>
+</tr>
+<tr>
+<td><code>2A</code></td>
+<td>seq</td>
+<td>42</td>
+</tr>
+<tr>
+<td><code>00 00 12 9F 5D 8E</code></td>
+<td>source</td>
+<td>VK4ABC</td>
+</tr>
+<tr>
+<td><code>02 F9 52 3D</code></td>
+<td>key prefix</td>
+<td>(illustrative)</td>
+</tr>
+<tr>
+<td><code>35 EF D8</code></td>
+<td>lat</td>
+<td>−27.467998°</td>
+</tr>
+<tr>
+<td><code>14 D1 6C</code></td>
+<td>lon</td>
+<td>153.023500°</td>
+</tr>
+<tr>
+<td><code>2F 3E</code></td>
+<td>symbol</td>
+<td><code>/&gt;</code></td>
+</tr>
+<tr>
+<td><code>00</code></td>
+<td>pflags</td>
+<td>no options, no ambiguity, not messaging-capable</td>
+</tr>
+<tr>
+<td><code>4D 6F 62 69 6C 65</code></td>
+<td>comment</td>
+<td>"Mobile"</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Blob:</strong> N = 28 (2 AES blocks). Without K it is 24, still 2 blocks.</li>
+<li><strong>On air:</strong> 37 bytes from the sender, plus 2 per repeater hop in SEQ.</li>
+<li><strong>APRS equivalent:</strong> info field <code>!2728.08S/15301.41E&gt;Mobile</code> is 26 bytes. The gated line <code>VK4ABC&gt;APZKPG,qAO,VK4AZ-10:!2728.08S/15301.41E&gt;Mobile</code> is 53 bytes plus CR/LF.</li>
+<li><strong>Compact text (§9.7):</strong> <code>VK4ABC Mobile: MPRS VK4ABC !2728.08S/15301.41E&gt;Mobile</code> is 53 bytes of the 160, and 69 bytes on air.</li>
+</ul>
+<p><strong>Second example</strong>, with K, ALT 45 m, CSE 90° at 60 km/h, no comment, from VK4ABC-9: <code>50 00 2B 05 80 A6 53 5D 8E 02 F9 52 3D 35 EF D8 14 D1 6C 2F 3E 03 2D 00 40 3C</code>.</p>
+<ul>
+<li>Blob N = 26, 37 bytes on air.</li>
+<li>APRS: <code>!2728.08S/15301.41E&gt;090/032/A=000148</code> (36 bytes).</li>
+</ul>
+<h3 id="53-mesh-aprs-conversion">5.3 Mesh → APRS conversion</h3>
+<ul>
+<li>The output is <code>SRC&gt;TOCALL,qAO,IGATE:</code> followed by <code>!</code> (or <code>=</code> when MSG is set), then the uncompressed position, the CSE extension, the altitude and the comment.</li>
+<li>Every part is rendered by the normative rules in §10.3, so every gateway emits the same line.</li>
+<li><strong>TS:</strong> a gateway <span class="kw">MUST NOT</span> use it to judge freshness or to build an APRS timestamp, because MeshCore clocks are often wrong (decision <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>; F§3.1). Freshness is the receive time, and replay is judged by seq (§9.3.1).</li>
+<li><strong>Validity checks:</strong> the same as Kelly's <code>checkPosition</code>: no fix, out of range, <code>0,0</code>, stale.</li>
+</ul>
+<h3 id="54-adverts-profile-0-and-frames-together">5.4 Adverts (profile 0) and frames together</h3>
+<ul>
+<li>A gateway <span class="kw">MAY</span> keep gating advert positions as in profile 0.</li>
+<li>When a bound station sends both, the per-station interval (§10) applies across both sources, so the station appears once per interval.</li>
+<li>A gateway <span class="kw">SHOULD</span> prefer the MeshPRS frame, because it carries the station's chosen SSID, symbol and comment.</li>
+</ul>
+<h3 id="55-smart-beaconing">5.5 Smart beaconing</h3>
+<p>A station sending position frames <span class="kw">SHOULD</span> beacon when any one of these holds since its last sent position:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Moved more than</td>
+<td>100 m</td>
+<td>Great-circle distance from the last <strong>sent</strong> position</td>
+</tr>
+<tr>
+<td>Heading changed by more than</td>
+<td>15°</td>
+<td>Only while speed ≥ 5 km/h; GPS heading is noise when stopped</td>
+</tr>
+<tr>
+<td>Time since last beacon</td>
+<td>30 min</td>
+<td>The maximum interval; also the beacon rate when stationary</td>
+</tr>
+</tbody>
+</table></div>
+<p>Rules on top of the triggers:</p>
+<ul>
+<li><strong>Minimum interval:</strong> a station <span class="kw">MUST NOT</span> beacon more often than its minimum interval. The default is 60 s, and it <span class="kw">MUST NOT</span> be set below 30 s. A trigger inside the minimum interval waits until the interval expires.</li>
+<li><strong>Configurable:</strong> all four values <span class="kw">SHOULD</span> be configurable.</li>
+<li><strong>Fixed stations:</strong> a station that does not move <span class="kw">SHOULD</span> rely on its advert position (§5.4) and <span class="kw">SHOULD NOT</span> send position frames, apart from one in reply to a query (§6.7) or when it changes symbol or comment. Adverts already flood and are already gated in profile 0, so a beacon frame only adds airtime (SA-8, <code>../design/reliability.md</code>).</li>
+</ul>
+<p><strong>Airtime, for context.</strong> At SF8, 62.5 kHz, CR 4/5 with MeshCore's 32-symbol preamble (F§1.4):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>On air</th>
+<th>Airtime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>21 bytes</td>
+<td>304 ms</td>
+</tr>
+<tr>
+<td>37 bytes</td>
+<td>386 ms</td>
+</tr>
+<tr>
+<td>53 bytes</td>
+<td>468 ms</td>
+</tr>
+<tr>
+<td>101 bytes</td>
+<td>714 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>A flood costs that once per repeater that relays it. The network-wide budget is decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>, and the defaults above are decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>; <code>../design/reliability.md</code> has the full table.</p>
+<h3 id="56-aprs-mesh">5.6 APRS → mesh</h3>
+<p>APRS-IS positions <span class="kw">MUST NOT</span> be put onto the mesh in 1.0 (§3.2). That includes a message sender's next position: the IS → RF practice of passing it on (F§4.6) is left for a later version (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</p>
+<hr />
+<h2 id="6-messaging">6. Messaging</h2>
+<h3 id="61-message-subtype-0x01">6.1 Message (subtype 0x01)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>header</td>
+<td></td>
+<td>9 / 13</td>
+<td>Source = sender</td>
+</tr>
+<tr>
+<td>addressee</td>
+<td>base-40 callsign</td>
+<td>6</td>
+<td>§4.1</td>
+</tr>
+<tr>
+<td>msgno</td>
+<td>u8</td>
+<td>1</td>
+<td>1-127. 0 = no ack wanted (an APRS message with no <code>{ID</code>). 128-255 reserved; bit 7 is the rej flag in acks</td>
+</tr>
+<tr>
+<td>text</td>
+<td>ASCII</td>
+<td>rest, 1-67</td>
+<td>Printable 0x20-0x7E. <span class="kw">MUST NOT</span> contain <code>{</code>, <code>\|</code> or <code>~</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Example:</strong> VK4ABC → VK4AZ-9, msgno 7, "Meet at Ipswich 1300".</p>
+<pre><code>00: 40 01 2C 00 00 12 9F 5D 8E 00 23 3A DD DD 8E 07
+10: 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20
+20: 31 33 30 30
+</code></pre>
+<ul>
+<li><strong>Blob:</strong> N = 36 (3 blocks), 53 bytes on air. Text up to 13 characters keeps N ≤ 29; up to 29 characters keeps N ≤ 45.</li>
+<li><strong>APRS:</strong> <code>:VK4AZ-9  :Meet at Ipswich 1300{7</code> (33 bytes); the gated line is 60 bytes.</li>
+<li><strong>Maximum message:</strong> 67 characters gives N = 83 and 101 bytes on air, which is well inside the 165-byte blob limit.</li>
+</ul>
+<h3 id="62-ack-subtype-0x02">6.2 Ack (subtype 0x02)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>header</td>
+<td></td>
+<td>9 / 13</td>
+<td>Source = the station acknowledging</td>
+</tr>
+<tr>
+<td>acked seq</td>
+<td>u8</td>
+<td>1</td>
+<td>The header seq of the acknowledged message frame</td>
+</tr>
+<tr>
+<td>msgno / kind</td>
+<td>u8</td>
+<td>1</td>
+<td>bits 0-6: the message's msgno (1-127); bit 7: 0 = ack, 1 = rej</td>
+</tr>
+<tr>
+<td>to hash</td>
+<td>2 bytes</td>
+<td>2</td>
+<td>The first 2 bytes of SHA-256 of the message sender's 6-byte encoded callsign (§4.1)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Without K an ack is 13 bytes: <strong>one AES block, 21 bytes on air</strong>.</p>
+<ul>
+<li><strong>Why a hash:</strong> the sender's full callsign would cost 4 more bytes and a second block.</li>
+<li><strong>The cost:</strong> a gateway can only render an ack for a message it has itself seen, either one it gated to APRS-IS or one it injected. It recovers the full callsign and the original APRS ID from its own record of (acked seq, msgno, to hash). An ack matching no record is dropped (<code>unknown ack</code>), which is harmless: a gateway that never saw the message never gated it.</li>
+<li><strong>Trust exception to §4.3:</strong> a gateway <span class="kw">MAY</span> gate an ack without K when it matches such a record and its source is that message's addressee. The exception waives <strong>only the key-prefix check</strong>: the ack's source callsign <span class="kw">MUST</span> still be bound (§4.3 step 2), otherwise it is dropped (<code>untrusted</code>). An ack only confirms delivery, and requiring K would push every ack to 17 bytes.</li>
+<li><strong>Re-acks:</strong> when a station acks another copy of the same message (§6.3), it sends a <strong>retry of its first ack frame</strong> (same seq, retry field incremented), not a new frame.</li>
+</ul>
+<p><strong>Example:</strong> VK4AZ-9 acks VK4ABC's msgno 7, sent with seq 0x2C (§6.1): <code>40 02 11 00 23 3A DD DD 8E 2C 07 75 E7</code>.</p>
+<ul>
+<li>Blob N = 13 (1 block), 21 bytes on air.</li>
+<li>APRS: <code>:VK4ABC   :ack7</code> (15 bytes); the gated line is 43 bytes.</li>
+</ul>
+<h3 id="63-ids-retries-and-duplicates">6.3 IDs, retries and duplicates</h3>
+<ul>
+<li><strong>Message numbers:</strong> a sender allocates msgno per addressee and <span class="kw">SHOULD</span> increment it for each new message, skipping 0.</li>
+<li><strong>Retries:</strong> a station that wants an ack <span class="kw">MAY</span> retry at most twice, at 30 s and 60 s after the first send (at most 3 sends), and stops when the ack arrives. The limit keeps to the airtime budget in <code>../design/reliability.md</code>.<ul>
+<li>A retry is the same frame with the header retry field incremented (§9.3): same seq, msgno and text.</li>
+<li>Repeaters therefore pass it on, while gateways still see one message (§10.2).</li>
+</ul>
+</li>
+<li><strong>The receiver:</strong><ul>
+<li><span class="kw">MUST</span> ack every copy it receives, including repeats, because the earlier ack may have been lost.</li>
+<li><span class="kw">SHOULD</span> show a message once, treating (source, msgno, text) within 30 min as one message.</li>
+</ul>
+</li>
+<li><strong>Privacy:</strong> messages travel on the MeshPRS channel, whose key is public (§12.1). Every station on the channel can read them. Applications <span class="kw">MUST NOT</span> present them as private.</li>
+</ul>
+<h3 id="64-length-and-fragmentation">6.4 Length and fragmentation</h3>
+<ul>
+<li><strong>Length:</strong> message text <span class="kw">MUST</span> be at most 67 characters, the APRS limit (F§4.5).</li>
+<li><strong>No fragmentation.</strong> MeshPRS defines none, because:<ul>
+<li>(a) MULTIPART carries only ACKs, so MeshCore gives applications no fragmentation (F§1.7);</li>
+<li>(b) each fragment of a flood is delivered or lost on its own, so a two-fragment message reaches a station with roughly the square of the single-frame delivery rate, and needs its own reassembly timers and partial-loss acks;</li>
+<li>(c) the longest APRS message already fits one frame (N = 83).</li>
+</ul>
+</li>
+<li><strong>Longer text:</strong> an application with longer text <span class="kw">MUST</span> send it as separate messages, each with its own msgno.</li>
+<li><strong>Over-long messages:</strong> a gateway <span class="kw">MUST NOT</span> truncate or split a message. A messaging gateway refuses an over-long APRS-IS message (<code>bad text</code>, §6.5; decision <a href="spec/decisions/0022-messaging-acks-and-g-frames.md">0022</a>).</li>
+</ul>
+<h3 id="65-messages-across-the-gateway">6.5 Messages across the gateway</h3>
+<p><strong>Mesh → APRS-IS</strong></p>
+<ul>
+<li>Output: <code>SRC&gt;TOCALL,qAO,IGATE::ADDRESSEE:text{ID</code>, with the addressee padded to 9 characters and ID = msgno in decimal (<code>7</code>). When msgno is 0 there is no <code>{ID</code>.</li>
+<li>A rej becomes <code>rejID</code>.</li>
+<li>An ack frame becomes <code>:TO       :ackID</code>, with TO and ID recovered from the gateway's record of the message (§6.2).</li>
+</ul>
+<p><strong>APRS-IS → mesh (messaging gateway only)</strong></p>
+<ul>
+<li>
+<p>A gateway <span class="kw">MAY</span> inject an APRS-IS message as a message frame with G = 1 only when all of these hold:</p>
+<ul>
+<li>the addressee has sent a MeshPRS frame that this gateway heard on the mesh within the last hour (else <code>addressee not heard</code>);</li>
+<li>the APRS sender has not been heard on the mesh in that hour (else <code>sender on mesh</code>);</li>
+<li>the addressee has not been heard via APRS-IS in that hour, as a source on APRS-IS other than in a MeshPRS-gated line (else <code>addressee on IS</code>);</li>
+<li>the path has no <code>TCPXX</code>, <code>NOGATE</code> or <code>RFONLY</code> (else <code>path excluded</code>);</li>
+<li>the line is not itself MeshPRS output: a line whose destination is the MeshPRS tocall and whose path contains <code>qAO</code> <span class="kw">MUST NOT</span> be injected (<code>looped</code>);</li>
+<li>sending it keeps the gateway within its APRS-IS → mesh airtime budget (decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>, <code>../design/reliability.md</code>) (else <code>airtime</code>).
+The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
+</ul>
+</li>
+<li>
+<p><strong>The loop rule's cost:</strong> two mesh islands, each with its own gateway, cannot message each other through APRS-IS in 1.0. A safe rule for that is left for a later version (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</p>
+</li>
+<li><strong>Direct only:</strong> an injected frame <span class="kw">MUST</span> be sent <strong>direct</strong> (GRP_DATA with the addressee's known path, §12.2) and <span class="kw">MUST NOT</span> be flooded. If the gateway has no path to the addressee, it does not send (<code>no path</code>). APRS-IS never causes a mesh flood.</li>
+<li><strong>Text:</strong> an APRS message whose text contains any byte outside 0x20-0x7E, or <code>|</code>, <code>~</code> or <code>{</code>, is not injected (<code>bad text</code>). It is never transliterated, so every gateway makes the same decision. Text over 67 characters is likewise refused (<code>bad text</code>).</li>
+<li><strong>Byte-identical frames.</strong> The frame <span class="kw">MUST</span> be identical whichever gateway builds it (§9.3 G). Let <code>H = SHA-256(APRS source ‖ ":" ‖ APRS ID)</code>, with the source in uppercase text as on APRS-IS:<ul>
+<li>seq = <code>H[0]</code>;</li>
+<li>msgno = <code>H[1] &amp; 0x7F</code>, or 1 if that is 0;</li>
+<li>for a message with no ID, <code>H = SHA-256(APRS source ‖ ":" ‖ text)</code>, and msgno = 0.</li>
+</ul>
+</li>
+<li><strong>ID record:</strong> the gateway keeps (seq, msgno, to hash) → (APRS source, APRS ID) for at least 30 min, so it can turn the mesh ack back into <code>ackID</code> with the original 1-5 character ID. A collision between two live messages to the same addressee is possible but rare (1 in 32,768 per pair). The gateway <span class="kw">MUST</span> then not inject the second until the first is acked or expired (<code>id clash</code>).</li>
+<li><strong>Reply-ack:</strong> a reply-ack <code>{MM}AA</code> is treated as message ID <code>MM</code> plus an ack of <code>AA</code>. <strong>UNVERIFIED:</strong> whether each half is limited to 2 characters (F§4.5).</li>
+<li><strong>No positions:</strong> the sender's position is not injected in 1.0 (§5.6).</li>
+<li><strong>Retries:</strong><ul>
+<li>A gateway injects the first copy of an APRS message.</li>
+<li>It <span class="kw">MAY</span> re-inject at most <strong>2</strong> APRS-side retries of the same (source, ID) while no mesh ack has been seen. Each re-injection sets the retry field to 1, then 2.</li>
+<li>It then drops further copies of that ID for 30 min (<code>duplicate</code>).</li>
+<li>Gateways following the same APRS-IS stream reach the same count, so their retries stay identical.</li>
+</ul>
+</li>
+<li><strong>Example:</strong> VK2XYZ-7 on APRS-IS sends "See you at the hamfest" to VK4ABC, ID <code>AB12</code>. Every gateway builds the same frame:<ul>
+<li>Frame: <code>60 01 A7 05 34 EB 0D B7 0E 00 00 12 9F 5D 8E 4B</code> followed by the text. Header <code>60</code> (version 1, G = 1), seq 0xA7, msgno 75. N = 38, 53 bytes on air.</li>
+<li>VK4ABC's ack: <code>40 02 2E 00 00 12 9F 5D 8E A7 4B 1A F7</code> (13 bytes), which a gateway renders as <code>:VK2XYZ-7 :ackAB12</code>.</li>
+</ul>
+</li>
+<li><strong>Whose ack counts:</strong> end to end. A gateway <span class="kw">MUST NOT</span> send <code>ackID</code> to APRS-IS until the mesh addressee's ack frame arrives (decision <a href="spec/decisions/0022-messaging-acks-and-g-frames.md">0022</a>).</li>
+</ul>
+<h3 id="66-bulletin-subtype-0x06">6.6 Bulletin (subtype 0x06)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>header</td>
+<td></td>
+<td>9 / 13</td>
+<td></td>
+</tr>
+<tr>
+<td>glen</td>
+<td>u8</td>
+<td>1</td>
+<td>bits 0-2: group name length 0-5 (6-7 invalid: <code>bad field</code>); bits 3-7 reserved</td>
+</tr>
+<tr>
+<td>id</td>
+<td>ASCII</td>
+<td>1</td>
+<td><code>0</code>-<code>9</code> = bulletin, <code>A</code>-<code>Z</code> = announcement (<code>BLNn</code> / <code>BLNx</code>)</td>
+</tr>
+<tr>
+<td>group</td>
+<td>ASCII</td>
+<td>glen</td>
+<td>Group name, 0-5 characters</td>
+</tr>
+<tr>
+<td>text</td>
+<td>ASCII</td>
+<td>rest, 1-67</td>
+<td>As for messages</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Example:</strong> VK4ABC, BLN1, "Net tonight 1930 on 147.000": <code>40 06 31 00 00 12 9F 5D 8E 00 31</code> followed by the text.</p>
+<ul>
+<li>Blob N = 38, 53 bytes on air.</li>
+<li>APRS: <code>:BLN1     :Net tonight 1930 on 147.000</code> (38 bytes); the line is 65 bytes.</li>
+</ul>
+<p><strong>On the channel</strong></p>
+<ul>
+<li>A bulletin frame is a broadcast: only stations listening at the time get it.</li>
+<li>Senders <span class="kw">SHOULD NOT</span> repeat a bulletin more often than every 30 min, and <span class="kw">SHOULD</span> stop after 4 h unless it is renewed. A Room Server bulletin agent as a defined role is left for a later version (decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>).</li>
+</ul>
+<p><strong>Store-and-forward through a Room Server (Tier A, optional)</strong></p>
+<p>A station or gateway <span class="kw">MAY</span> also post a bulletin to a MeshCore Room Server, so stations that were away receive it when they next sync. The room server's limits shape what it can be used for (F§3.4):</p>
+<ul>
+<li><strong>32 posts.</strong> The store is a RAM ring of 32 posts, so the oldest drop off. A poster <span class="kw">SHOULD NOT</span> use more than a few slots of a shared room.</li>
+<li><strong>151 bytes.</strong> Longer text is truncated silently, so a poster <span class="kw">MUST</span> keep each post within 151 bytes. The compact text form <code>BLN1: &lt;text&gt;</code> (§9.7 syntax, without the <code>MPRS &lt;SRC&gt;</code> prefix, since the room records the poster) is the recommended content.</li>
+<li><strong>RAM only.</strong> Posts are lost on reboot. A poster <span class="kw">SHOULD</span> re-post its live bulletins when it sees that the room has restarted, or at least every few hours.</li>
+<li><strong>Encrypted delivery.</strong> Each post reaches each client as an encrypted, ACKed TXT_MSG. Airtime grows as clients × posts, and the delivered copies are DMs: a gateway <span class="kw">MUST NOT</span> gate room-server deliveries to APRS-IS (§13). Only the channel frame or the APRS-IS original may be gated.</li>
+</ul>
+<p>Durable storage would need firmware changes (Annex C).</p>
+<h3 id="67-query-subtype-0x07">6.7 Query (subtype 0x07)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>header</td>
+<td></td>
+<td>9 / 13</td>
+<td></td>
+</tr>
+<tr>
+<td>q</td>
+<td>u8</td>
+<td>1</td>
+<td>bits 0-6 query type; bit 7 = directed (a target follows)</td>
+</tr>
+<tr>
+<td>target</td>
+<td>base-40 callsign</td>
+<td>6 if directed</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Meaning</th>
+<th>APRS analogue</th>
+<th>Reply</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00</td>
+<td>Stations, send your position</td>
+<td><code>?APRS?</code></td>
+<td>Position frame</td>
+</tr>
+<tr>
+<td>0x01</td>
+<td>Position of the target</td>
+<td><code>?APRSP</code> (directed)</td>
+<td>Position frame</td>
+</tr>
+<tr>
+<td>0x02</td>
+<td>Gateways, identify</td>
+<td><code>?IGATE?</code></td>
+<td>Status frame (code 8) from each gateway: role and counts</td>
+</tr>
+<tr>
+<td>0x03</td>
+<td>Send your neighbour report</td>
+<td>none</td>
+<td>Neighbour report</td>
+</tr>
+<tr>
+<td>0x04</td>
+<td>Send your telemetry definitions</td>
+<td>none</td>
+<td>Telemetry kinds 1-4</td>
+</tr>
+<tr>
+<td>0x05</td>
+<td>Send your status</td>
+<td><code>?APRSS</code></td>
+<td>Status frame</td>
+</tr>
+<tr>
+<td>0x06-0x7F</td>
+<td>Reserved</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>The APRS analogues are for orientation only. <code>?APRS?</code> and <code>?IGATE?</code> come from the findings (F§4.2, F§4.6); <code>?APRSP</code> and <code>?APRSS</code> are <strong>UNVERIFIED</strong> (not yet in the research notes).</p>
+<p><strong>Examples:</strong></p>
+<ul>
+<li>Directed position query from VK4AZ-9 to VK4ABC: <code>40 07 12 00 23 3A DD DD 8E 81 00 00 12 9F 5D 8E</code>. N = 16, 37 bytes on air. Compare <code>:VK4ABC   :?APRSP</code> (17 bytes).</li>
+<li><code>?IGATE?</code>: <code>40 07 13 00 23 3A DD DD 8E 02</code>. N = 10 (1 block), 21 bytes on air.</li>
+</ul>
+<p><strong>Rules</strong></p>
+<ul>
+<li>A responder to an undirected query <span class="kw">MUST</span> wait a random 0-30 s before replying.</li>
+<li>It <span class="kw">SHOULD NOT</span> reply if it sent the requested frame type in the last 5 min.</li>
+<li>It <span class="kw">MUST NOT</span> reply to the same query type more than once per 10 min.</li>
+<li>A directed query is answered only by the target.</li>
+<li>Queries <span class="kw">MUST NOT</span> be gated to APRS-IS, since <code>?</code> queries are not gated (F§4.2).</li>
+<li>APRS-IS queries <span class="kw">MUST NOT</span> be put onto the mesh. A gateway <span class="kw">MAY</span> answer APRS-IS <code>?IGATE?</code> itself (F§4.6).</li>
+</ul>
+<hr />
+<h2 id="7-telemetry-subtype-0x03">7. Telemetry (subtype 0x03)</h2>
+<h3 id="71-choice-of-form">7.1 Choice of form</h3>
+<p>A <strong>compact 5-analog + 8-bit form</strong> is the mandatory form, mapping 1:1 onto APRS <code>T#</code>. Raw CayenneLPP is an optional second kind.</p>
+<p><strong>Why the compact form:</strong></p>
+<ul>
+<li>APRS telemetry <em>is</em> 5 analog values (0-255 in APRS 1.0) and 8 bits, and Kelly's iGate already reduces a node's readings to that shape (<code>igate.js</code> <code>tlmValues</code>).</li>
+<li>It costs 1 byte per value; CayenneLPP needs a channel byte, a type byte and 2-4 value bytes per reading.</li>
+<li>Its scaling travels separately in definition frames, which change rarely, so every value frame stays small.</li>
+</ul>
+<p><strong>Why LPP stays as an option:</strong> it is what MeshCore sensors already produce (F§3.2), but it can only reach APRS through a mapping, and §7.3 requires that mapping to come from the station.</p>
+<p><strong>Definitions come from the station.</strong> The meaning and scaling of a station's channels (PARM, UNIT, EQNS, BITS) <span class="kw">MUST</span> come from the station: either its definition frames (kinds 1-4) or a profile ID (kind 5). A gateway <span class="kw">MUST NOT</span> invent definitions or use its owner's local mapping for a station's MeshPRS frames, because two gateways would then publish different definitions for one station. Kelly's per-owner mapping (<code>igate.js</code> <code>tlm*</code>) applies only to profile-0 telemetry, polled with an encrypted request, which is not a MeshPRS frame.</p>
+<p><strong>Profile-0 polled telemetry exception (decision <a href="spec/decisions/0006-polled-telemetry-exception.md">0006</a>).</strong> §13 forbids gating REQ/RESPONSE contents. Kelly's profile-0 telemetry is exactly that: a response to the gateway's own encrypted <code>GET_TELEMETRY_DATA</code> or <code>GET_STATUS</code> poll (F§3.2, F§3.3). The one exception is:</p>
+<ul>
+<li>A gateway <span class="kw">MAY</span> gate telemetry that it <strong>polled itself, with its own login</strong>, from a node <strong>bound to the gateway's owner</strong> (the owner's own nodes), using the owner's mapping.</li>
+<li>It <span class="kw">MUST NOT</span> gate any other node's responses, or any response it did not request.</li>
+</ul>
+<h3 id="72-layout">7.2 Layout</h3>
+<p>After the header, a <strong>kind</strong> byte selects the body:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>kind</th>
+<th>Body</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00</td>
+<td>values</td>
+<td>Below</td>
+</tr>
+<tr>
+<td>0x01</td>
+<td><code>PARM</code> text</td>
+<td>ASCII after <code>PARM.</code>: up to 13 comma-separated names. Per-field length limits as in Kelly <code>igate.js</code> (<code>A_LEN</code> 7,7,6,6,5; <code>B_LEN</code> 6,5,4,4,4,3,3,3, from APRS 1.0.1). <strong>UNVERIFIED</strong> against APRS12c (not yet in the findings)</td>
+</tr>
+<tr>
+<td>0x02</td>
+<td><code>UNIT</code> text</td>
+<td>ASCII after <code>UNIT.</code></td>
+</tr>
+<tr>
+<td>0x03</td>
+<td><code>EQNS</code> text</td>
+<td>ASCII after <code>EQNS.</code>: 15 comma-separated coefficients</td>
+</tr>
+<tr>
+<td>0x04</td>
+<td><code>BITS</code> text</td>
+<td>ASCII after <code>BITS.</code>: <code>bbbbbbbb,Title</code></td>
+</tr>
+<tr>
+<td>0x05</td>
+<td>profile ID</td>
+<td>u16 LE: a registered telemetry profile that fixes PARM, UNIT, EQNS and BITS (and, for LPP, which reading goes in which slot). 1.0 has no registry (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>), so only kinds 1-4 define channels</td>
+</tr>
+<tr>
+<td>0x10</td>
+<td>CayenneLPP</td>
+<td>Bytes in MeshCore's telemetry-reply format, without the 4-byte sender timestamp (F§3.2). Gated only when the station has announced a profile ID that maps it</td>
+</tr>
+</tbody>
+</table></div>
+<p>Until a profile registry exists, a gateway <span class="kw">MUST NOT</span> gate kinds 0x05 and 0x10 (<code>not gated</code>, decision <a href="spec/decisions/0017-rendering-gaps.md">0017</a>).
+| others | reserved | |</p>
+<p><strong>Values body (kind 0):</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mask</td>
+<td>u8</td>
+<td>1</td>
+<td>bits 0-4: A1-A5 present; bit 7: digital byte present; bits 5-6 reserved</td>
+</tr>
+<tr>
+<td>A1..A5</td>
+<td>u8 each</td>
+<td>1 per bit set in 0-4</td>
+<td>Raw 0-255, in order</td>
+</tr>
+<tr>
+<td>bits</td>
+<td>u8</td>
+<td>1 if bit 7</td>
+<td>B1 = bit 7 (MSB) … B8 = bit 0</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Example:</strong> VK4ABC-3, A1-A5 = 156, 34, 0, 200, 99, bits <code>10000000</code>: <code>40 03 2A 04 9B C4 93 5D 8E 00 9F 9C 22 00 C8 63 80</code>.</p>
+<ul>
+<li>Blob N = 17 (2 blocks), 37 bytes on air.</li>
+<li>APRS: <code>T#042,156,034,000,200,099,10000000</code> (34 bytes); the line is 63 bytes.</li>
+</ul>
+<p><strong>Definition example (kind 1):</strong> <code>PARM</code> text "Battery,Noise,TX air,RSSI,SNR,LowBat".</p>
+<ul>
+<li>Blob N = 46, 69 bytes on air.</li>
+<li>APRS: <code>:VK4ABC-3 :PARM.Battery,Noise,TX air,RSSI,SNR,LowBat</code> (52 bytes).</li>
+</ul>
+<h3 id="73-rules">7.3 Rules</h3>
+<ul>
+<li>The APRS <code>T#</code> sequence is the header seq as three decimal digits (000-255). Every gateway therefore produces the same line, so APRS-IS's duplicate filter merges copies (§10.3).</li>
+<li>A gateway converts kinds 1-4 into the APRS messages a station sends to itself: <code>:SRC      :PARM.…</code>, with the source padded to 9 characters (F§4.5).</li>
+<li>A station <span class="kw">SHOULD</span> send its definitions (or profile ID) when it starts, when they change, in reply to query 0x04, and otherwise at most every 6 h.</li>
+<li>A gateway passes a station's definitions on to APRS-IS as received. Until it has received them, it gates the values only, which APRS shows unscaled.</li>
+<li>Analog values are 8-bit (decision <a href="spec/decisions/0021-wire-format-fixed.md">0021</a>). Wider values may come later as a new kind from the reserved range.</li>
+</ul>
+<hr />
+<h2 id="8-weather-objects-neighbours-and-status">8. Weather, objects, neighbours and status</h2>
+<h3 id="81-weather-subtype-0x04">8.1 Weather (subtype 0x04)</h3>
+<p>After the header comes a 16-bit presence mask (u16 LE), then each present field in bit order:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Bit</th>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Units</th>
+<th>APRS field (F§4.5)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>position</td>
+<td>i24 lat, i24 lon</td>
+<td>6</td>
+<td>As §5.1</td>
+<td>Positional weather <code>!…/_</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td>wind direction</td>
+<td>u8</td>
+<td>1</td>
+<td>× 360/256°</td>
+<td><code>ddd</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>wind speed</td>
+<td>u8</td>
+<td>1</td>
+<td>× 0.5 m/s</td>
+<td><code>/sss</code> (mph)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>gust</td>
+<td>u8</td>
+<td>1</td>
+<td>× 0.5 m/s</td>
+<td><code>gGGG</code> (mph)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>temperature</td>
+<td>i16</td>
+<td>2</td>
+<td>× 0.1 °C</td>
+<td><code>tTTT</code> (°F)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>humidity</td>
+<td>u8</td>
+<td>1</td>
+<td>% (1-100)</td>
+<td><code>hHH</code> (<code>00</code> = 100 %)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>pressure</td>
+<td>u16</td>
+<td>2</td>
+<td>× 0.1 hPa</td>
+<td><code>bBBBBB</code> (tenths of hPa)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>rain, last hour</td>
+<td>u16</td>
+<td>2</td>
+<td>× 0.1 mm</td>
+<td><code>rRRR</code> (hundredths of an inch)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>rain, last 24 h</td>
+<td>u16</td>
+<td>2</td>
+<td>× 0.1 mm</td>
+<td><code>pPPP</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>rain since midnight</td>
+<td>u16</td>
+<td>2</td>
+<td>× 0.1 mm</td>
+<td><code>PPPP</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>luminosity</td>
+<td>u16</td>
+<td>2</td>
+<td>W/m²</td>
+<td><code>Lnnn</code> / <code>lnnn</code></td>
+</tr>
+<tr>
+<td>11-15</td>
+<td>reserved</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Example:</strong> VK4ABC-13 at −27.6150, 152.7600 (illustrative), wind 90° at 3.0 m/s gusting 5.5, 24.5 °C, 65 %, 1013.2 hPa, no rain in the last hour.</p>
+<pre><code>00: 40 04 05 B7 1F D7 53 5D 8E FF 00 AF B9 D8 1C A1
+10: 6C 40 06 0B F5 00 41 94 27 00 00
+</code></pre>
+<ul>
+<li><strong>Blob:</strong> N = 27 (2 blocks), 37 bytes on air.</li>
+<li><strong>APRS:</strong> <code>!2736.90S/15245.60E_090/007g012t076r000h65b10132</code> (48 bytes); the line is 78 bytes.</li>
+</ul>
+<p><strong>Conversion</strong></p>
+<ul>
+<li>Units: m/s × 2.236936 → mph; °C × 9/5 + 32 → °F; mm ÷ 0.254 → hundredths of an inch. Each is rounded.</li>
+<li>Missing fields: wind direction and speed are written as <code>.../...</code>; any other missing field is left out.</li>
+<li><strong>Without a position:</strong> in 1.0 a weather frame <strong>without</strong> bit 0 is mesh-only, and gateways <span class="kw">MUST NOT</span> gate it (<code>no position</code>).<ul>
+<li>Borrowing the station's last position would differ between gateways.</li>
+<li>APRS positionless weather (<code>_MMDDHHMM…</code>) would need a receive-time stamp, and its format is <strong>UNVERIFIED</strong> (not in the findings).</li>
+<li>Fixed weather stations therefore include their position: 6 bytes.</li>
+</ul>
+</li>
+<li><strong>Range limits:</strong> humidity outside 1-100 gives <code>bad field</code>.</li>
+<li><strong>Symbol:</strong> <code>/_</code>.</li>
+</ul>
+<h3 id="82-object-item-subtype-0x05">8.2 Object / Item (subtype 0x05)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>header</td>
+<td></td>
+<td>9 / 13</td>
+<td>Source = the object's owner</td>
+</tr>
+<tr>
+<td>oflags</td>
+<td>u8</td>
+<td>1</td>
+<td>bit 0 live (1) / killed (0); bit 1 item (1) / object (0); bit 2 TS present; bit 3 reserved; bits 4-7 name length 1-9 (0 and 10-15 invalid: <code>bad field</code>; an item of 1-2 characters likewise)</td>
+</tr>
+<tr>
+<td>name</td>
+<td>ASCII</td>
+<td>1-9</td>
+<td>Printable. Objects 1-9 characters, items 3-9</td>
+</tr>
+<tr>
+<td>lat, lon</td>
+<td>i24, i24</td>
+<td>6</td>
+<td>As §5.1</td>
+</tr>
+<tr>
+<td>symbol</td>
+<td>2 × ASCII</td>
+<td>2</td>
+<td>e.g. <code>/r</code> repeater, <code>/o</code> EOC</td>
+</tr>
+<tr>
+<td>ts</td>
+<td>u32 LE</td>
+<td>4 if TS</td>
+<td>The owner's Unix time when it last set the object, in s</td>
+</tr>
+<tr>
+<td>comment</td>
+<td>ASCII</td>
+<td>rest, 0-43</td>
+<td>e.g. frequency and offset for a repeater</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Example:</strong> VK4ABC owns the live object "IPSRPT", symbol <code>/r</code>, comment "147.000MHz -060" (illustrative).</p>
+<pre><code>00: 40 05 30 00 00 12 9F 5D 8E 61 49 50 53 52 50 54
+10: AF B9 D8 1C A1 6C 2F 72 31 34 37 2E 30 30 30 4D
+20: 48 7A 20 2D 30 36 30
+</code></pre>
+<ul>
+<li><strong>Blob:</strong> N = 39, 53 bytes on air.</li>
+<li><strong>APRS:</strong> <code>;IPSRPT   *291030z2736.90S/15245.60Er147.000MHz -060</code> (52 bytes); the line is 79 bytes.</li>
+</ul>
+<p><strong>Conversion</strong></p>
+<ul>
+<li><strong>Timestamp source.</strong> Objects are always timestamped on APRS (F§4.5).<ul>
+<li>When TS is set and lies within ±1 h of the gateway's receive time, the gateway <span class="kw">MUST</span> use TS as <code>DDHHMMz</code> UTC, truncated to the minute. A sender clock is the same for every gateway, so the line comes out identical (§10.3).</li>
+<li>Otherwise, when TS is absent or implausible (MeshCore clocks are often wrong, decision <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>), the gateway uses its receive time, truncated to the minute. Gateways can then differ at a minute boundary.</li>
+<li>Owners with a good clock (GPS or phone time) <span class="kw">SHOULD</span> set TS.</li>
+</ul>
+</li>
+<li>Items become <code>)NAME!pos</code> (live) or <code>)NAME_pos</code> (killed). APRS12c marks items "not recommended", so owners <span class="kw">SHOULD</span> use objects.</li>
+</ul>
+<p><strong>Refresh and kill</strong></p>
+<ul>
+<li>An owner <span class="kw">SHOULD</span> resend a live object every 30-60 min, and at most every 10 min.</li>
+<li>To remove one, it sends the frame with live = 0 three times about 1 min apart, then stops.</li>
+<li>A gateway <span class="kw">MUST</span> only gate objects whose owner (the header source) is bound (§4.3).</li>
+<li>Any gateway owner <span class="kw">MAY</span> run an object server role for objects they are responsible for (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</li>
+</ul>
+<h3 id="83-neighbour-report-subtype-0x08">8.3 Neighbour report (subtype 0x08)</h3>
+<p>"Who can hear me" data for coverage maps. It has no APRS equivalent.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>header</td>
+<td></td>
+<td>9 / 13</td>
+<td></td>
+</tr>
+<tr>
+<td>nflags</td>
+<td>u8</td>
+<td>1</td>
+<td>bits 0-4: entry count 0-31; bits 5-6: prefix size − 1 (1-3 bytes; value 3 reserved); bit 7: direction (0 = I heard them, 1 = they heard me)</td>
+</tr>
+<tr>
+<td>entries</td>
+<td></td>
+<td>count × (prefix + 2)</td>
+<td>Each entry: prefix (key prefix = path hash of the neighbour), SNR (i8, dB × 4, MeshCore's own encoding), age (u8, minutes since heard; 255 = 255 or more)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Example:</strong> VK4ABC heard four neighbours, with 2-byte prefixes (illustrative):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>SNR</th>
+<th>Age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9B80</td>
+<td>+6.25 dB</td>
+<td>1 min</td>
+</tr>
+<tr>
+<td>FBAE</td>
+<td>−3.5 dB</td>
+<td>4 min</td>
+</tr>
+<tr>
+<td>A698</td>
+<td>−10.5 dB</td>
+<td>12 min</td>
+</tr>
+<tr>
+<td>582A</td>
+<td>+2.0 dB</td>
+<td>30 min</td>
+</tr>
+</tbody>
+</table></div>
+<pre><code>00: 40 08 32 00 00 12 9F 5D 8E 24 9B 80 19 01 FB AE
+10: F2 04 A6 98 D6 0C 58 2A 08 1E
+</code></pre>
+<ul>
+<li><strong>Blob:</strong> N = 26 (2 blocks), 37 bytes on air.</li>
+<li><strong>Size limit:</strong> the count is limited so that N ≤ 165 (31 entries of 3-byte prefixes without K).</li>
+</ul>
+<p><strong>Data sources</strong> (F§3.3)</p>
+<p>Direction 0 (I heard them):</p>
+<ul>
+<li>zero-hop adverts the station heard;</li>
+<li>the last hop of floods it received;</li>
+<li>a repeater's own <code>GET_NEIGHBOURS</code> list, which needs a login and contains repeaters only.</li>
+</ul>
+<p>Direction 1 (they heard me): <code>DISCOVER_RESP</code>, which carries the SNR at which each repeater heard the station's <code>NODE_DISCOVER_REQ</code>. Discovery is zero-hop and limited to 4 answers per 2 min, so a station <span class="kw">MUST NOT</span> send discovery requests just to fill reports faster than that.</p>
+<p><strong>Rules</strong></p>
+<ul>
+<li>A station <span class="kw">SHOULD NOT</span> send a neighbour report more than every 30 min, except in reply to query 0x03.</li>
+<li>Neighbour reports map to nothing on APRS: in 1.0, gateways <span class="kw">MUST NOT</span> gate them to APRS-IS (<code>not gated</code>). They <span class="kw">MAY</span> publish them elsewhere, such as a map or MQTT. This is final for 1.0 (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</li>
+</ul>
+<h3 id="84-emergency-status-subtype-0x09">8.4 Emergency / Status (subtype 0x09)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>header</td>
+<td></td>
+<td>9 / 13</td>
+<td></td>
+</tr>
+<tr>
+<td>code</td>
+<td>u8</td>
+<td>1</td>
+<td>bits 0-3 status code (below); bits 4-6 reserved; bit 7 = position follows</td>
+</tr>
+<tr>
+<td>lat, lon</td>
+<td>i24, i24</td>
+<td>6 if bit 7</td>
+<td>As §5.1</td>
+</tr>
+<tr>
+<td>text</td>
+<td>ASCII</td>
+<td>rest, 0-62</td>
+<td>Status text (APRS limit 62, F§4.5)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Status codes</strong></p>
+<ul>
+<li>0-7 follow the Mic-E standard messages: 0 Off duty, 1 En route, 2 In service, 3 Returning, 4 Committed, 5 Special, 6 Priority, 7 <strong>Emergency</strong>. This list is from APRS101 ch. 10 and not yet in the research notes (UNVERIFIED).</li>
+<li>8 = plain status (no code).</li>
+<li>9 = emergency cancelled.</li>
+<li>10-15 are reserved.</li>
+</ul>
+<p><strong>Examples:</strong></p>
+<ul>
+<li>Plain status "Net control tonight": <code>40 09 33 00 00 12 9F 5D 8E 08</code> followed by the text.<ul>
+<li>N = 29 (2 blocks), 37 bytes on air.</li>
+<li>APRS <code>&gt;Net control tonight</code> (20 bytes).</li>
+</ul>
+</li>
+<li>Emergency with position: <code>40 09 34 00 00 12 9F 5D 8E 87 35 EF D8 14 D1 6C</code> followed by "Vehicle rollover".<ul>
+<li>N = 32, 53 bytes on air.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Conversion</strong></p>
+<ul>
+<li>Code 8 becomes <code>&gt;text</code>. A position in a code 8 frame is not rendered (decision <a href="spec/decisions/0017-rendering-gaps.md">0017</a>).</li>
+<li>Codes 0-7 and 9 with a position become a position report with the symbol <code>/&gt;</code> (the frame carries none; decision <a href="spec/decisions/0017-rendering-gaps.md">0017</a>), whose comment starts with the code's name in capitals, for example <code>!2728.08S/15301.41E&gt;EMERGENCY Vehicle rollover</code> (46 bytes). Without a position they become <code>&gt;NAME text</code>.<ul>
+<li><strong>UNVERIFIED:</strong> whether APRS clients recognise an emergency outside Mic-E at all. Mic-E carries emergency in the destination field, which MeshPRS drops (§1.2). The comment prefix makes the emergency readable by people, though APRS software may not flag it (decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>).</li>
+</ul>
+</li>
+</ul>
+<p><strong>Emergency handling</strong></p>
+<ul>
+<li>A station in emergency <span class="kw">SHOULD</span> send the frame every 60 s for 5 min, then every 5 min until it sends code 9.</li>
+<li><strong>Gateway priority:</strong><ul>
+<li>A gateway <span class="kw">MUST</span> exempt code 7 and 9 frames from the per-station interval.</li>
+<li>It <span class="kw">MUST</span> queue them ahead of all other traffic, and <span class="kw">MUST NOT</span> drop one for <code>queue full</code> while it holds any lower-priority frame (it drops that frame instead).</li>
+<li>It <span class="kw">MUST</span> still apply the global rate limit, so that a flood of fake emergencies cannot flood APRS-IS.</li>
+</ul>
+</li>
+<li><strong>Local alert:</strong> on a code 7 or code 9 frame, a gateway <span class="kw">SHOULD</span> also alert its own operator locally, and <span class="kw">MAY</span> show it on its own map or log (decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>).</li>
+<li><strong>Mesh priority:</strong> stations relaying nothing do nothing different. MeshCore has no priority field for group packets, so mesh-side priority would need firmware changes (Annex C).</li>
+</ul>
+<hr />
+<h2 id="9-frame-format-encodings-and-limits">9. Frame format, encodings and limits</h2>
+<h3 id="91-carrier">9.1 Carrier</h3>
+<ul>
+<li><strong>Packet:</strong> a Tier A frame is the blob of a MeshCore <strong>GRP_DATA</strong> packet (payload type 0x06) on the MeshPRS channel (§12.1), plaintext <code>data_type u16 LE, data_len u8, blob</code> (F§1.4).</li>
+<li><strong>Data type:</strong> <strong>0xFF4D</strong>, bytes <code>4D FF</code> on the wire. It is a development value in the unregistered FF00-FFFE range (F§1.6), chosen because it is not 0xFFFF (<code>DATA_TYPE_DEV</code>, which every experimenter uses by default). It is <strong>provisional</strong>: a registered value in 0100-FEFF replaces it once a working implementation can be shown (decision <a href="spec/decisions/0012-trial-identifiers.md">0012</a>).</li>
+<li><strong>Collisions:</strong> another project may use the same development value on the same channel. A receiver <span class="kw">MUST</span> therefore validate every frame (§9.5) before acting on it.</li>
+<li><strong>Size:</strong> the blob is at most 165 bytes (<code>MAX_GROUP_DATA_LENGTH</code>, F§1.4).</li>
+</ul>
+<h3 id="92-size">9.2 Size</h3>
+<p>On-air size of a GRP_DATA packet with an N-byte blob (F§1.4):</p>
+<p><code>1 (header) + 1 (path_len) + path + 1 (channel hash) + 2 (MAC) + 16·⌈(N+3)/16⌉</code></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Blob N</th>
+<th>AES blocks</th>
+<th>On air from the sender (no path)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>≤ 13</td>
+<td>1</td>
+<td>21</td>
+</tr>
+<tr>
+<td>≤ 29</td>
+<td>2</td>
+<td>37</td>
+</tr>
+<tr>
+<td>≤ 45</td>
+<td>3</td>
+<td>53</td>
+</tr>
+<tr>
+<td>≤ 61</td>
+<td>4</td>
+<td>69</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Steps:</strong> the steps are 13, 29, 45 and 61 bytes. Each repeater hop adds a path hash (2 bytes in SEQ).</li>
+<li><strong>Targets:</strong><ul>
+<li>An ack without K <span class="kw">MUST</span> fit N ≤ 13 (it is fixed at 13).</li>
+<li>Telemetry values <span class="kw">MUST</span> fit N ≤ 29 (at most 22 with K).</li>
+<li>A position beacon with its normal settings <span class="kw">MUST</span> fit N ≤ 45, and <span class="kw">SHOULD</span> fit N ≤ 29. A longer comment is allowed occasionally (§5.1).</li>
+<li>Weather and neighbour frames <span class="kw">SHOULD</span> fit N ≤ 29.</li>
+<li>A message is 16 bytes plus its text (20 with K): it fits N ≤ 45 for up to 29 characters, and longer text up to 67 characters is allowed (§6.4).</li>
+</ul>
+</li>
+</ul>
+<h3 id="93-common-header">9.3 Common header</h3>
+<p>Every frame starts with:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Byte</th>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>hdr</td>
+<td>bits 7-6 <strong>version</strong> (0-3); bit 5 <strong>G</strong>; bit 4 <strong>K</strong>; bits 3-2 <strong>gating</strong>; bits 1-0 <strong>retry</strong></td>
+</tr>
+<tr>
+<td>1</td>
+<td>subtype</td>
+<td>Decision 0002 (§9.4)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>seq</td>
+<td>u8, per-originator sequence number (below)</td>
+</tr>
+<tr>
+<td>3-8</td>
+<td>source</td>
+<td>base-40 callsign (§4.1)</td>
+</tr>
+<tr>
+<td>9-12</td>
+<td>key prefix</td>
+<td>Only when K = 1: the first 4 bytes of the sender's node key (§4.3)</td>
+</tr>
+</tbody>
+</table></div>
+<p>The header is 9 bytes, or 13 with K. MeshPRS defines no hop count: the MeshCore path length already gives one.</p>
+<p><strong>Version.</strong> The version is the top 2 bits of byte 0. This layout is version <strong>1</strong>, frozen at the 1.0 Candidate. Version 0 was the Draft 0.1 experimental layout: it is byte-identical apart from the version bits, and a receiver <span class="kw">MAY</span> accept it as version 1 until 1.0 final. Stations <span class="kw">MUST</span> send version 1. Version 2 is spare. Version 3 is reserved as an escape: a version byte follows the header, to be defined by the version that first uses it. Why this choice:</p>
+<ul>
+<li>Decision 0002 gives the subtype the whole of byte 1, so the version can't share it.</li>
+<li>A separate version byte costs a byte on every frame, and the frame needs a flags byte anyway (G, K, gating, retry).</li>
+<li>Using the GRP_DATA data type as the version would spend a registry allocation per version, and the registry asks for small ranges (F§1.6). The data type identifies MeshPRS; it is not a version counter.</li>
+<li>2 bits plus the escape is enough for a format that changes rarely, and frees the bits needed for gating and retry without a second flags byte.</li>
+</ul>
+<p><strong>G (gatewayed in from APRS-IS).</strong> G is set only by a gateway, on a frame it built from APRS-IS. It is the mesh-side loop marker: a gateway <span class="kw">MUST NOT</span> gate a G = 1 frame to APRS-IS (<code>looped</code>). Stations <span class="kw">MUST</span> send G = 0. A G = 1 frame <span class="kw">MUST</span> be byte-identical whichever gateway builds it: it carries no gateway identity and nothing derived from a gateway's clock. Its seq and msgno come from the APRS sender and message ID (§6.5), so the mesh's duplicate table drops a second gateway's copy.</p>
+<p><strong>K (key prefix present).</strong> §4.3.</p>
+<p><strong>Gating (2 bits):</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning</th>
+<th>APRS analogue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Normal: may be gated</td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td><strong>Do not gate.</strong> Gateways <span class="kw">MUST NOT</span> gate the frame anywhere (<code>nogate</code>)</td>
+<td><code>NOGATE</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Test.</strong> Gateways <span class="kw">MUST NOT</span> pass the frame to live APRS-IS (<code>test</code>); a gateway <span class="kw">MAY</span> pass it to a test server (§11)</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Reserved; receivers treat it as 1</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>The two flags share one 2-bit field instead of two bits because they are mutually exclusive outcomes of one decision (where the frame may go). "Test but may go live" and "do not gate but test" mean nothing, so a field rules out the contradictory combinations, and the fourth value is spare for a later rule.</p>
+<p><strong>Retry (2 bits).</strong> 0 on the first send of a frame, incremented on each retransmission of that same frame. Stations retry at most twice (§6.3) and gateways re-inject at most twice (§6.5), so value 3 is never sent in 1.0; receivers treat it like any other retry.</p>
+<ul>
+<li>Every other byte of a retry is identical to the original, seq included.</li>
+<li>The retry field exists because repeaters' duplicate table hashes only the payload (F§2.4), and on the SEQ mesh it remembers a payload for about 2.7 h at measured load (SA-8, <code>../design/reliability.md</code>). Without the field, a retry would never get past the nodes that carried the first copy.</li>
+<li>The retry value <span class="kw">MUST NOT</span> affect any APRS-IS output, and gateways ignore it when removing duplicates (§10.2). Every retry of one frame therefore collapses to one APRS-IS line.</li>
+</ul>
+<p><strong>seq.</strong> The sequence space belongs to the <strong>originator identity</strong>: the node key when K is set, otherwise the source callsign.</p>
+<ul>
+<li>A sender keeps one counter per originator identity, so a node sending under several SSIDs with K set uses <strong>one</strong> counter for all of them.</li>
+<li>It increments the counter (mod 256) by 1 for each new frame, of any subtype. A retry keeps its frame's seq.</li>
+<li>A sender <span class="kw">MUST</span> either always or never set K for a given source callsign, so that its identity does not switch between key and callsign. G = 1 frames take a derived seq instead (§6.5). The counter serves as:</li>
+<li>the field that makes otherwise-identical frames differ. With AES-ECB under a fixed channel key, identical plaintext gives identical ciphertext (F§1.5), so without it a stationary station's repeated beacon would be dropped silently as a duplicate;</li>
+<li>the gateways' duplicate key (§10.2);</li>
+<li>the APRS telemetry <code>T#</code> sequence (§7.3);</li>
+<li>the replay check (§9.3.1).</li>
+</ul>
+<p><strong>Why 8 bits:</strong></p>
+<ul>
+<li>A counter repeats only after 256 new frames. At the 120 s default minimum beacon interval (§5.5) that is 8.5 h, longer than the 2.7 h duplicate horizon.</li>
+<li>At the 30 s floor it is 2.1 h. A repeat then also needs every other byte to be identical, which a moving station's position never is.</li>
+<li>A timestamp was rejected because node clocks are unreliable (decision <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>). A 16-bit counter would cost a byte on every frame.</li>
+<li>A sender <span class="kw">SHOULD</span> keep its counter across reboots (in flash or app storage). One that can't <span class="kw">MUST</span> start at a random value.</li>
+</ul>
+<h4 id="931-sequence-wrap-reboot-and-replay">9.3.1 Sequence wrap, reboot and replay</h4>
+<p>A gateway keeps, for each originator identity (§9.3), the last accepted seq and when it was accepted. For a new frame, let <code>d = (seq − last) mod 256</code> (serial-number arithmetic, as in RFC 1982):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>d</th>
+<th>Meaning</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>The same frame, or one of its retries</td>
+<td>Duplicate (§10.2)</td>
+</tr>
+<tr>
+<td>1-127</td>
+<td>Newer</td>
+<td>Accept; <code>last = seq</code></td>
+</tr>
+<tr>
+<td>128-255</td>
+<td>Older</td>
+<td>If <code>last</code> was accepted less than 10 min ago: drop (<code>replayed</code>). Otherwise accept and resync (a wrap or reboot after a quiet spell)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Reboot inside 10 min.</strong> A node that reboots within 10 minutes and restarts at a random seq looks "older" about half the time. To recover, a gateway that drops two consecutive <code>replayed</code> frames from one originator, where the second is newer than the first (<code>1 ≤ d ≤ 127</code> between them), <span class="kw">MUST</span> resync to the second and accept it. A rebooted node therefore loses at most one frame. Frames with <code>d = 0</code> whose body differs from the stored frame (ignoring retry) are treated as "older".</p>
+<p><strong>Limits.</strong> Senders <span class="kw">MUST NOT</span> send more than 127 new frames per originator in any 10 minutes, so "newer" stays unambiguous. This replay check stops casual replays only (§14).</p>
+<h3 id="94-subtypes">9.4 Subtypes</h3>
+<p>As fixed by decision <a href="spec/decisions/0002-subtype-table.md">0002</a>:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Service</th>
+<th>Layout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00</td>
+<td>Position</td>
+<td>§5.1</td>
+</tr>
+<tr>
+<td>0x01</td>
+<td>Message</td>
+<td>§6.1</td>
+</tr>
+<tr>
+<td>0x02</td>
+<td>Ack</td>
+<td>§6.2</td>
+</tr>
+<tr>
+<td>0x03</td>
+<td>Telemetry</td>
+<td>§7.2</td>
+</tr>
+<tr>
+<td>0x04</td>
+<td>Weather</td>
+<td>§8.1</td>
+</tr>
+<tr>
+<td>0x05</td>
+<td>Object / Item</td>
+<td>§8.2</td>
+</tr>
+<tr>
+<td>0x06</td>
+<td>Bulletin</td>
+<td>§6.6</td>
+</tr>
+<tr>
+<td>0x07</td>
+<td>Query</td>
+<td>§6.7</td>
+</tr>
+<tr>
+<td>0x08</td>
+<td>Neighbour report</td>
+<td>§8.3</td>
+</tr>
+<tr>
+<td>0x09</td>
+<td>Emergency / Status</td>
+<td>§8.4</td>
+</tr>
+<tr>
+<td>0x0A-0xDF</td>
+<td>Reserved for future standard use</td>
+<td></td>
+</tr>
+<tr>
+<td>0xE0-0xFE</td>
+<td>Experimental / private</td>
+<td></td>
+</tr>
+<tr>
+<td>0xFF</td>
+<td>Reserved</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="95-receive-validation-versioning-and-extension">9.5 Receive validation, versioning and extension</h3>
+<p>A receiver <span class="kw">MUST</span> drop the frame, counting the named reason, when any of these holds:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data type is not MeshPRS's</td>
+<td>(not counted: not ours)</td>
+</tr>
+<tr>
+<td>N &lt; 9, or &lt; 13 with K, or shorter than the subtype's fixed fields</td>
+<td><code>short frame</code></td>
+</tr>
+<tr>
+<td>Version not implemented</td>
+<td><code>unknown version</code></td>
+</tr>
+<tr>
+<td>Source or another callsign field invalid (§4.1)</td>
+<td><code>bad callsign</code></td>
+</tr>
+<tr>
+<td>Subtype 0xFF, or reserved 0x0A-0xDF not implemented</td>
+<td><code>unknown subtype</code></td>
+</tr>
+<tr>
+<td>A field outside its defined values (bulletin glen 6-7, object name length 0 or 10-15, neighbour prefix size 4, humidity 0 or &gt; 100)</td>
+<td><code>bad field</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Further rules:</p>
+<ul>
+<li><strong>Experimental subtypes:</strong> subtypes 0xE0-0xFE <span class="kw">MAY</span> be used by private agreement. A conforming gateway <span class="kw">MUST NOT</span> gate them to APRS-IS (<code>experimental subtype</code>).</li>
+<li><strong>Unknown subtypes:</strong> a receiver <span class="kw">MUST NOT</span> gate or answer a subtype it does not implement. It <span class="kw">MAY</span> show or log it.</li>
+<li><strong>Field order:</strong> every subtype lays out its fields in this order: fixed fields, then optional fields in the order of their flag bits, then at most one variable tail (comment or text) running to the end of the blob. New optional fields may only use flag bits that are reserved now, and sit before the tail.</li>
+<li><strong>Reserved flag set:</strong> a receiver that finds a reserved flag set in a subtype's flags or mask byte cannot find the tail. It <span class="kw">MAY</span> use the fields before that point, <span class="kw">MUST NOT</span> gate the frame, and <span class="kw">SHOULD</span> count it (<code>unknown flag</code>).</li>
+<li><strong>Integers:</strong> all multi-byte integers are little-endian two's complement, except callsigns (§4.1).</li>
+</ul>
+<h3 id="96-text-and-limits">9.6 Text and limits</h3>
+<ul>
+<li><strong>Text fields:</strong> printable ASCII (0x20-0x7E) only, because APRS is 7-bit and gateways must produce identical bytes. A sender <span class="kw">MUST NOT</span> put UTF-8 into a frame. A gateway <span class="kw">MUST</span> drop (<code>bad text</code>) rather than transliterate a frame that breaks this. Comments <span class="kw">MUST NOT</span> contain <code>|</code> or <code>~</code>, as in Kelly's <code>clean</code>.</li>
+<li><strong>APRS-IS line:</strong> at most 512 bytes including CR/LF (F§4.1). No MeshPRS conversion comes near it; the longest example here is 107 bytes.</li>
+<li><strong>MeshCore limits:</strong> a blob is at most 165 bytes (GRP_DATA), and a compact text line at most 160 (GRP_TXT, F§1.4).</li>
+</ul>
+<h3 id="97-compact-text-profile-grp_txt-fallback">9.7 Compact text profile (GRP_TXT fallback)</h3>
+<p>For stock phone apps that can send and show channel text but not GRP_DATA. Frames are GRP_TXT messages on the MeshPRS channel. The app shows them as <code>name: text</code>, where <code>name</code> is the sender's node name.</p>
+<p><strong>Syntax</strong> (the text after <code>name:</code>):</p>
+<pre><code>MPRS[.KKKKKKKK] SP SRC SP INFO
+</code></pre>
+<ul>
+<li><code>MPRS</code> marks a MeshPRS text frame. Text not starting with it is ordinary chat and <span class="kw">MUST</span> be ignored by gateways.</li>
+<li><code>.KKKKKKKK</code> is optional: the first 4 bytes of the sender's node key in uppercase hex. It is the text form of the K flag.</li>
+<li><code>SRC</code> is the source callsign (§4.2).</li>
+<li>
+<p><code>INFO</code> is an APRS info field (F§4.5) of one of these types:</p>
+<ul>
+<li><code>!</code>, <code>=</code>, <code>/</code>, <code>@</code>: positions, uncompressed or compressed;</li>
+<li><code>:</code>: message, ack, rej, bulletin, telemetry definitions;</li>
+<li><code>;</code> object, <code>)</code> item, <code>&gt;</code> status, <code>T#</code> telemetry, <code>_</code> positionless weather.</li>
+</ul>
+<p>Any other type <span class="kw">MUST</span> be dropped (<code>bad text</code>), including <code>?</code> queries, <code>}</code> third-party, <code>`</code> and <code>'</code> Mic-E, and <code>$</code> NMEA.</p>
+</li>
+<li>
+<p><strong>Length:</strong> <code>name:</code> prefix plus text <span class="kw">MUST NOT</span> exceed 160 bytes; the NUL terminator is not counted (BaseChatMesh.cpp:519-531, F§1.4). With a 31-byte node name and a 9-character SRC, that leaves 112 bytes for INFO, or 103 with the key token. That is enough for a 67-character message with a 5-character ID (84 bytes).</p>
+</li>
+<li><strong>No seq needed:</strong> GRP_TXT's plaintext starts with a 4-byte sender timestamp, so repeats differ from one second to the next (F§1.4).</li>
+<li><strong>Not gated in 1.0:</strong> gateways <span class="kw">MUST NOT</span> gate compact text frames to APRS-IS (<code>text profile</code>).<ul>
+<li>A GRP_TXT packet carries no sender key, and the key token is self-asserted text that anyone can type, so even the weak binding check of §4.3 is impossible.</li>
+<li>The profile exists so that MeshPRS traffic is readable, and can be typed, in stock phone apps on the mesh.</li>
+<li>Gating it would need signed frames, which a later version may define (decisions <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>, <a href="spec/decisions/0026-signatures-later.md">0026</a>).</li>
+</ul>
+</li>
+<li><strong>Cost:</strong> the required position example takes 53 bytes and 69 on air, against 37 for the binary frame (§16.1).</li>
+</ul>
+<hr />
+<h2 id="10-gateway-behaviour">10. Gateway behaviour</h2>
+<h3 id="101-pipeline">10.1 Pipeline</h3>
+<p>Every gateway <span class="kw">MUST</span> process each mesh-side frame in <strong>this order</strong>. The order is normative, because it decides which reason a frame is counted under, and the test vectors depend on that. It is Kelly's profile-0 order with the frame steps added. Each drop has a named reason and is counted.</p>
+<ol>
+<li><strong>Decode and validate</strong> (§9.5): <code>short frame</code>, <code>unknown version</code>, <code>bad callsign</code>, <code>unknown subtype</code>, <code>bad field</code>, <code>experimental subtype</code>, <code>unknown flag</code>, <code>bad text</code>.</li>
+<li><strong>Loop and gating checks</strong> (§9.3):<ul>
+<li>G = 1 gives <code>looped</code>;</li>
+<li>gating 1 or 3 gives <code>nogate</code>;</li>
+<li>gating 2 gives <code>test</code>, unless this gateway is connected to a test server;</li>
+<li>subtypes 0x07 and 0x08, telemetry kinds 0x05 and 0x10 (§7.2), and weather without a position, give <code>not gated</code> / <code>no position</code>;</li>
+<li>compact text frames give <code>text profile</code>.</li>
+</ul>
+</li>
+<li><strong>Trust</strong> (§4.3): <code>untrusted</code>, <code>no key</code>, <code>key mismatch</code>, <code>unknown ack</code>.</li>
+<li><strong>Replay</strong> (§9.3.1): <code>replayed</code>. <strong>Validity</strong>, for subtypes with a position: <code>no fix</code>, <code>out of range</code>, <code>0,0</code>, <code>stale</code>, and <code>replayed (older advert)</code> for adverts.</li>
+<li><strong>Duplicate suppression</strong> (§10.2): <code>duplicate</code>.</li>
+<li><strong>Per-station interval</strong>, kept per station and service: the key is (source, subtype), plus the telemetry kind for telemetry and the object name for objects (decision <a href="spec/decisions/0018-interval-per-service.md">0018</a>). Kelly: 2 min, down to a 30 s floor when the station has moved more than 500 m. Messages, acks and emergencies are exempt: <code>interval</code>.</li>
+<li><strong>Queue and jitter</strong> (a bounded queue with a random delay of 0-5 s, so gateways hearing one frame don't all send at once): <code>queue full</code>.</li>
+<li><strong>Global rate limit</strong> (Kelly: token bucket, 1 per 5 s, burst 3). A frame that would exceed it waits in the queue, but at most 10 s: <code>rate</code>.</li>
+<li><strong>Maximum hold:</strong> a frame not sent within <strong>15 s</strong> of its receipt <span class="kw">MUST</span> be dropped (<code>expired</code>).<ul>
+<li>The figure is jitter (5 s) plus the longest wait (10 s).</li>
+<li>It keeps every gateway's line for one frame inside APRS-IS's 30 s duplicate window (F§4.6), so copies still merge.</li>
+<li>Emergencies (§8.4) are held to the same limit.</li>
+</ul>
+</li>
+</ol>
+<p>The numbers are the network-wide figures of decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>.</p>
+<h3 id="102-duplicates">10.2 Duplicates</h3>
+<ul>
+<li><strong>Mesh side:</strong> the duplicate key is (originator identity, seq) (§9.3), <strong>ignoring the retry field</strong>. Subtype is not part of the key, because one counter covers every subtype. A gateway <span class="kw">MUST</span> treat a frame matching a key it accepted in the last 10 min as a duplicate (<code>duplicate</code>), so all retries of one frame give at most one APRS-IS line. The 127-frames-per-10-minutes limit (§9.3.1) keeps the key unambiguous.</li>
+<li><strong>APRS side:</strong> a gateway <span class="kw">MUST NOT</span> send an APRS line with the same source, destination and info as one it sent in the last 30 s, which is the APRS-IS window (F§4.6).</li>
+</ul>
+<h3 id="103-deterministic-output-normative">10.3 Deterministic output (normative)</h3>
+<p>APRS-IS removes duplicates only when source, destination and info match (F§4.6). So that several gateways hearing one flood collapse into one APRS-IS packet, every gateway <span class="kw">MUST</span> render a given frame to the same bytes. Hence:</p>
+<ul>
+<li><strong>One tocall:</strong> all MeshPRS gateways <span class="kw">MUST</span> use the same tocall (§11).</li>
+<li><strong>Output from the frame alone:</strong> the callsign-SSID claim, symbol and comment are all taken from the frame (§5.1). A gateway's local lists decide <em>whether</em> it gates, never <em>what</em> it emits.</li>
+<li><strong>Fixed rendering rules</strong> for every field, below. They are written in integer arithmetic, where <code>⌊x⌋</code> is floor division, so that floating-point rounding cannot differ between implementations.</li>
+</ul>
+<p><strong>The rendering rules</strong> (the script check is in Annex A):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Position format</td>
+<td>Always <strong>uncompressed</strong> <code>DDMM.mmH</code> / <code>DDDMM.mmH</code>. Compressed positions are never emitted, for readability, ambiguity support and profile-0 compatibility</td>
+</tr>
+<tr>
+<td>Latitude</td>
+<td>From the raw i24 <code>v</code>: <code>hm = ⌊(|v|·540000·2 + 2²³) / 2²⁴⌋</code> hundredths of a minute (half-up). Degrees = <code>⌊hm/6000⌋</code> (2 digits), minutes = <code>hm mod 6000</code> written as <code>MM.mm</code>. The carry at 60.00′ happens by itself (−27.99999° gives <code>2800.00S</code>). <code>S</code> if <code>v &lt; 0</code>, else <code>N</code></td>
+</tr>
+<tr>
+<td>Longitude</td>
+<td>The same with <code>|v|·1080000·2</code>, 3-digit degrees, <code>W</code>/<code>E</code></td>
+</tr>
+<tr>
+<td>Ambiguity</td>
+<td>Then blank the trailing digits as §5.1</td>
+</tr>
+<tr>
+<td>Course</td>
+<td><code>c</code> raw byte: <code>⌊(c·720 + 256) / 512⌋</code>; 0 becomes <code>360</code>; 3 digits</td>
+</tr>
+<tr>
+<td>Speed</td>
+<td>km/h <code>s</code> to knots: <code>⌊(s·2000 + 1852) / 3704⌋</code>, 3 digits</td>
+</tr>
+<tr>
+<td>Altitude</td>
+<td>m <code>a</code> to feet: <code>⌊(|a|·20000 + 3048) / 6096⌋</code> with the sign of <code>a</code>; written <code>/A=</code> and 6 characters (<code>-</code> plus 5 digits when negative). The i16 maximum, 32767 m, gives 107503 ft, which fits. A negative value below −99999 ft is clamped to <code>-99999</code></td>
+</tr>
+<tr>
+<td>Order after the symbol code</td>
+<td>CSE extension, then <code>/A=</code>, then the comment</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>Frames are printable ASCII already (§9.6; frames that aren't are dropped, never mapped). The gateway trims leading and trailing spaces, truncates so that the whole text after the symbol code (extension, altitude, comment) is at most 43 characters, then trims trailing spaces again. Message text: at most 67 characters; bulletins likewise; status at most 62 characters</td>
+</tr>
+<tr>
+<td>Wind speed and gust</td>
+<td>Raw <code>u</code> (0.5 m/s units) to mph: <code>⌊(u·3600000 + 1609344) / 3218688⌋</code>, 3 digits</td>
+</tr>
+<tr>
+<td>Wind direction</td>
+<td>As course. <strong>UNVERIFIED:</strong> whether APRS weather writes north as <code>360</code> or <code>000</code></td>
+</tr>
+<tr>
+<td>Temperature</td>
+<td>Raw <code>t</code> (0.1 °C) to °F: <code>⌊(2·(9t + 1600) + 50) / 100⌋</code>, 3 characters (<code>-05</code> style when negative), clamped to −99 to 999</td>
+</tr>
+<tr>
+<td>Rain</td>
+<td>Raw <code>r</code> (0.1 mm) to hundredths of an inch: <code>⌊(200r + 254) / 508⌋</code>, 3 digits, clamped to 999</td>
+</tr>
+<tr>
+<td>Humidity</td>
+<td>100 written <code>00</code>, otherwise 2 digits</td>
+</tr>
+<tr>
+<td>Pressure</td>
+<td>Tenths of a hPa as is, 5 digits (the u16 maximum, 65535, fits)</td>
+</tr>
+<tr>
+<td>Luminosity</td>
+<td>Below 1000 W/m²: <code>L</code> + 3 digits. 1000-1999: <code>l</code> + 3 digits of (value − 1000). 2000 and over: clamped to <code>l999</code>. <strong>UNVERIFIED:</strong> the <code>L</code>/<code>l</code> split (the findings name the fields only)</td>
+</tr>
+<tr>
+<td>Weather field order</td>
+<td><code>_ddd/sss</code> (or <code>.../...</code>), <code>g</code>, <code>t</code>, <code>r</code>, <code>p</code>, <code>P</code>, <code>h</code>, <code>b</code>, <code>L</code>/<code>l</code>; absent fields left out</td>
+</tr>
+<tr>
+<td>Timestamps</td>
+<td>Objects per §8.2: the frame's TS when plausible, otherwise receive time, truncated to the minute</td>
+</tr>
+<tr>
+<td>Telemetry</td>
+<td><code>T#</code> + seq (3 digits) + the five analogs (3 digits each, empty when absent) + 8 bits (<code>00000000</code> when the frame has no digital byte; decision <a href="spec/decisions/0017-rendering-gaps.md">0017</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<p>A frame received either side of a minute boundary, when its timestamp comes from receive time, can still produce two lines; this is accepted.</p>
+<h3 id="104-summary">10.4 Summary</h3>
+<p>The full iGate design is in <a href="design/igate-design.md"><code>../design/igate-design.md</code></a>. In summary, a MeshPRS gateway:</p>
+<ul>
+<li>logs in to APRS-IS with its own callsign-SSID and passcode, and never with <code>pass -1</code>, which cannot send (F§4.3);</li>
+<li>marks every gated packet <code>qAO</code>;</li>
+<li>uses the tocall <code>APZKPG</code> (provisional, §11);</li>
+<li>removes duplicates as in §10.2;</li>
+<li>puts nothing from APRS-IS onto the mesh except what its role allows (§3.2, §6.5), and never general positions or floods.</li>
+</ul>
+<hr />
+<h2 id="11-aprs-is-specifics">11. APRS-IS specifics</h2>
+<ul>
+<li><strong>Login:</strong> <code>user CALL-SS pass NNNNN vers NAME VER filter …</code> on port 14580. Use <code>aunz.aprs2.net</code>, falling back to <code>rotate.aprs2.net</code> (F§4.3).</li>
+<li><strong>q-construct:</strong> gated packets are <code>SRC&gt;TOCALL,qAO,IGATECALL:info</code>. qAO is the receive-only construct and explicitly covers translated non-APRS sources (F§4.2).<ul>
+<li>A gateway <span class="kw">MUST NOT</span> add any other path element.</li>
+<li>Its own packets (status, <code>?IGATE?</code> replies) go as <code>IGATECALL&gt;TOCALL,TCPIP*:</code> without qAO, as Kelly's <code>statusPacket</code> does.</li>
+</ul>
+</li>
+<li><strong>Tocall:</strong> <strong>one tocall for all MeshPRS gateways</strong>, whoever wrote them, because APRS-IS's duplicate hash includes the destination (F§4.6, §10.3). It is <code>APZKPG</code>, from the unregistered experimental <code>APZ</code> range and currently unallocated (F§4.4).<ul>
+<li>It is provisional. A registered tocall for MeshPRS is to be requested from aprs-deviceid before 1.0 final (decisions <a href="spec/decisions/0012-trial-identifiers.md">0012</a>, <a href="spec/decisions/0020-publish-1-0-candidate.md">0020</a>). The precedent is <code>APM2A?</code> for mesh2aprs.</li>
+<li>Implementations identify themselves in their login <code>vers</code> string, not in the tocall.</li>
+<li>A line whose destination is the MeshPRS tocall and whose path contains <code>qAO</code> is MeshPRS output, and <span class="kw">MUST NOT</span> be injected into the mesh (§6.5).</li>
+</ul>
+</li>
+<li><strong>Filter (messaging gateway):</strong> a filter that brings messages for the callsigns heard on the mesh, for example <code>g/</code> with those callsigns. It <span class="kw">MUST NOT</span> be a range filter feeding positions to the mesh.</li>
+<li><strong>Packets never gated to APRS-IS:</strong> frames from G = 1, room-server deliveries, anything from a DM or a private channel (§13).</li>
+<li><strong>Testing:</strong> test against a private aprsc instance with no uplink, not the live network (F§4.3). Frames with gating = 2 (test) <span class="kw">MAY</span> go only to such a server. A gateway <span class="kw">MUST NOT</span> send them to any server that has an uplink to APRS-IS.</li>
+</ul>
+<hr />
+<h2 id="12-mesh-side-specifics">12. Mesh-side specifics</h2>
+<h3 id="121-the-meshprs-channel">12.1 The MeshPRS channel</h3>
+<p>Tier A frames travel on one dedicated <strong>hashtag channel</strong>, so the key is public and derivable by anyone:</p>
+<ul>
+<li><strong>Name:</strong> <code>#meshprs</code> (decision <a href="spec/decisions/0012-trial-identifiers.md">0012</a>). <code>#aprs</code> was not chosen because it may already carry human chat.</li>
+<li><strong>Key:</strong> the first 16 bytes of <code>sha256("#meshprs")</code> = <code>650fa1fd5d2c0bc01449a964a130ea1c</code>.</li>
+<li><strong>Channel hash:</strong> the first byte of <code>sha256(key)</code> = <code>0xBA</code>. The Public channel's is <code>0x11</code>. The <code>#aprs</code> alternative would be key <code>910a190e741c01e20043ef8e74db9400</code>, hash <code>0xE7</code>.</li>
+<li><strong>Collisions:</strong> a 1-byte channel hash collides with roughly 1 in 256 other channels. The firmware's MAC check and §9.5 validation separate them.</li>
+<li><strong>Not Public:</strong> MeshPRS traffic <span class="kw">MUST NOT</span> be sent on the Public channel, as MBUG asks (F§5.4; R7).</li>
+</ul>
+<h3 id="122-routing">12.2 Routing</h3>
+<ul>
+<li><strong>Floods:</strong> broadcasts (positions, objects, bulletins, status, queries, neighbour reports) are sent as FLOOD GRP_DATA, path <code>0xFF</code> in <code>CMD_SEND_CHANNEL_DATA</code> (F§2.3).</li>
+<li><strong>Unscoped:</strong> floods <span class="kw">SHOULD</span> be unscoped (no transport code), because a region-scoped flood dies at any repeater that does not know the region (F§2.2; decision <a href="spec/decisions/0001-tier-a-carrier-grp-data.md">0001</a>).</li>
+<li><strong>Direct, from APRS-IS:</strong> everything a gateway injects from APRS-IS (G = 1) <span class="kw">MUST</span> be sent direct, on the addressee's known path, and <span class="kw">MUST NOT</span> be flooded. With no known path, the gateway does not send (§6.5).</li>
+</ul>
+<h3 id="123-radio-settings-and-etiquette">12.3 Radio settings and etiquette</h3>
+<ul>
+<li><strong>Radio:</strong> MBUG settings: 923.125 MHz, BW 62.5 kHz, SF8, CR 4/5, <code>path.hash.mode 1</code> (2-byte hashes), <code>multi.acks 1</code>, <code>flood.advert.interval 83</code> (F§5.4).</li>
+<li><strong>Adverts:</strong> MeshPRS does not change advert behaviour.</li>
+<li><strong>Airtime:</strong> MBUG gives no numeric budget, so MeshPRS sets one (decisions <a href="spec/decisions/0011-airtime-budget.md">0011</a>, <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>). Meanwhile the smart-beaconing minimums (§5.5), the query back-off (§6.7) and the report interval (§8.3) bound a station's output.</li>
+</ul>
+<hr />
+<h2 id="13-regulatory-considerations">13. Regulatory considerations</h2>
+<p><em>Informative where it describes the law; the regulator's text governs.</em> See F§5. Decision 0003 settles it for 1.0: nothing from the mesh goes to amateur RF.</p>
+<p>The rules below are normative (decision <a href="spec/decisions/0003-regulatory-rules.md">0003</a>). They come from the regulatory research's recommendations R1-R8 (F§5.5).</p>
+<ul>
+<li><strong>The mesh is not amateur.</strong> MeshCore at 915-928 MHz operates under the <strong>Radiocommunications (Low Interference Potential Devices) Class Licence 2025 (F2025L01047)</strong>, not the repealed 2015 instrument. There is no amateur allocation in that band, so a mesh node is never an amateur station, even when an amateur runs it (F§5.1, F§5.2).<ul>
+<li>LIPD allows encryption and needs no callsign, so GRP_DATA under a public channel key is lawful there.</li>
+<li>The applicable LIPD item for LoRa (Table 8 item 6, and the clause 43 PSD limit) is UNVERIFIED.</li>
+</ul>
+</li>
+<li><strong>Never gate private content.</strong> A gateway <span class="kw">MUST NOT</span> gate DMs (TXT_MSG), private-channel content, room-server deliveries, or telemetry request/response contents to APRS-IS or anywhere else, except the polled-telemetry exception of §7.1 (decision <a href="spec/decisions/0006-polled-telemetry-exception.md">0006</a>). Only MeshPRS-channel frames and adverts may be gated (R3).</li>
+<li><strong>Verified amateur callsigns only.</strong> A gateway <span class="kw">MUST</span> gate to APRS-IS only frames from a valid amateur callsign bound to a node key (§4.2, §4.3), through a passcode-verified login, marked qAO (R1, R2). Anonymous LIPD users are never gated. This is APRS-IS policy, not ACMA law (F§5.3).</li>
+<li><strong>Plaintext only on amateur RF.</strong> Gating to amateur RF is out of scope (§1.2). If a later version allows it, everything put on amateur RF <span class="kw">MUST</span> be the decoded plaintext APRS form, never a MeshCore packet or ciphertext. This follows the Amateur Stations Class Licence 2023 s13(2)(d)(iv) ban on encoding to obscure meaning (R4).<ul>
+<li>It <span class="kw">MUST</span> come only from verified amateur callsigns, in third-party format, with the gateway's callsign as the source.</li>
+<li>It <span class="kw">MUST</span> meet s12(1) identification and, if unattended, s13(4) (R5).</li>
+<li>APRS RF → mesh → APRS RF chains <span class="kw">MUST NOT</span> be built without a repeater apparatus licence (R6).</li>
+<li>The 433.05-434.79 MHz overlap between LIPD and amateur is UNVERIFIED.</li>
+</ul>
+</li>
+<li><strong>No commercial content.</strong> A gateway <span class="kw">MUST NOT</span> gate financial-gain or advertising content to APRS-IS.<ul>
+<li>This is <strong>APRS-IS policy</strong>: APRS-IS is kept to amateur use (F§5.3). It is not law: s13(2)(a) and (d) of the Amateur Stations Class Licence govern amateur stations, and APRS-IS is not one.</li>
+<li>Those clauses would apply directly only to content put on amateur RF.</li>
+</ul>
+</li>
+<li><strong>APRS-IS → mesh</strong> is lawful under LIPD, but it <span class="kw">MUST</span>:<ul>
+<li>be rate-limited to the gateway's airtime budget;</li>
+<li>be sent direct only, never flooded (§6.5);</li>
+<li>not use #Public;</li>
+<li>honour <code>NOGATE</code>, <code>RFONLY</code> and <code>TCPXX</code> (R7).</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="14-security-and-privacy-considerations">14. Security and privacy considerations</h2>
+<ul>
+<li><strong>Callsign spoofing.</strong><ul>
+<li>The callsign and key prefix in a frame are self-asserted and copyable (§4.3).</li>
+<li>Default-deny binding stops unknown stations reaching APRS-IS, but not someone copying a bound station's prefix within radio range of a gateway. The requirement that the gateway heard the bound key's advert recently (§4.3 item 5) narrows this.</li>
+<li>1.0 defines no signed frames (decision <a href="spec/decisions/0026-signatures-later.md">0026</a>). Firmware-level sender authentication is Annex C.</li>
+</ul>
+</li>
+<li><strong>Replay.</strong><ul>
+<li>A recorded frame replayed later carries an old seq and old content. The 10-minute duplicate window catches only short-term replays.</li>
+<li>The seq check (§9.3.1) rejects a replay only while the station has sent within the last 10 min; after a quiet spell a replayed frame resyncs the gateway and is gated as if current, because the stale check uses receive time.</li>
+<li>Full replay protection needs trustworthy clocks or signatures (decisions <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>, <a href="spec/decisions/0026-signatures-later.md">0026</a>).</li>
+</ul>
+</li>
+<li><strong>Location privacy.</strong><ul>
+<li>Stations opt in by sending frames, and gateways gate only bound stations.</li>
+<li>Ambiguity (§5.1) and sender-side rounding (Kelly <code>roundPos</code>) are available.</li>
+<li>Anyone can read positions sent on the MeshPRS channel.</li>
+</ul>
+</li>
+<li><strong>Channel confidentiality.</strong><ul>
+<li>The channel key is public (§12.1), and ECB shows identical blocks (F§1.5).</li>
+<li>Nothing on the MeshPRS channel is confidential, and no application may suggest that it is (§6.3).</li>
+</ul>
+</li>
+<li><strong>Abuse.</strong> A gateway <span class="kw">SHOULD</span> support a blocklist by node key and by callsign, with drops counted (<code>blocked</code>). A blocklist <span class="kw">SHOULD</span> be able to override a binding.</li>
+<li><strong>Resource exhaustion.</strong><ul>
+<li>Every gateway queue is bounded (§10.1).</li>
+<li>Responders back off on queries (§6.7).</li>
+<li>A sender is limited to 127 new frames per 10 min (§9.3.1) and by the beaconing minimums (§5.5).</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="15-conformance">15. Conformance</h2>
+<p>MeshPRS 1.0 requires the subtypes position (0x00), message (0x01), ack (0x02), telemetry (0x03), object/item (0x05) and status (0x09); weather (0x04), bulletin (0x06) and neighbour report (0x08) are optional, and query (0x07) must be parsed but need not be answered (decision <a href="spec/decisions/0007-scope-1-0.md">0007</a>). The profiles:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Profile</th>
+<th><span class="kw">MUST</span> implement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Station</strong></td>
+<td>§9 header and validation; sending position (§5) with smart beaconing (§5.5); receiving messages and acks if it sets MSG</td>
+</tr>
+<tr>
+<td><strong>iGate</strong></td>
+<td>§9.5 validation; §4.3 trust; §10 pipeline; §11; conversion of every subtype it gates; never gating 0x07, 0x08 or compact text</td>
+</tr>
+<tr>
+<td><strong>Messaging gateway</strong></td>
+<td>iGate, plus §6.5 APRS-IS → mesh</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="151-test-vector-files">15.1 Test vector files</h3>
+<p>Conformance is proven by the shared vectors in <a href="test-vectors"><code>test-vectors/</code></a>, following the <code>kelly-page/bridge/igate_vectors.json</code> pattern. The examples in this specification were checked by script (Annex A). The file names are fixed here so other documents can copy them:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frames.json</code></td>
+<td>Encode and decode: field values ↔ blob hex, for every subtype, including the invalid frames of §9.5</td>
+</tr>
+<tr>
+<td><code>gateway.json</code></td>
+<td>Mesh → APRS-IS: a frame (or advert) plus gateway state → the exact APRS-IS line, or a drop reason</td>
+</tr>
+<tr>
+<td><code>inject.json</code></td>
+<td>APRS-IS → mesh: an APRS-IS line plus gateway state → the exact G = 1 blob and its routing, or a drop reason</td>
+</tr>
+<tr>
+<td><code>text.json</code></td>
+<td>Compact text profile: GRP_TXT text → parsed fields, or a drop reason</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="152-drop-reasons">15.2 Drop reasons</h3>
+<p>These are the only drop-reason names. Implementations and vectors <span class="kw">MUST</span> use these exact strings.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Where</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>short frame</code></td>
+<td>§9.5</td>
+<td>Blob shorter than the header or the subtype's fixed fields</td>
+</tr>
+<tr>
+<td><code>unknown version</code></td>
+<td>§9.5</td>
+<td>Header version not implemented</td>
+</tr>
+<tr>
+<td><code>bad callsign</code></td>
+<td>§4.1, §4.2, §9.5</td>
+<td>Invalid callsign field, or not a valid APRS-IS amateur callsign</td>
+</tr>
+<tr>
+<td><code>unknown subtype</code></td>
+<td>§9.5</td>
+<td>Subtype 0xFF, or a reserved subtype not implemented</td>
+</tr>
+<tr>
+<td><code>bad field</code></td>
+<td>§9.5</td>
+<td>A field outside its defined values</td>
+</tr>
+<tr>
+<td><code>experimental subtype</code></td>
+<td>§9.5</td>
+<td>Subtype 0xE0-0xFE</td>
+</tr>
+<tr>
+<td><code>unknown flag</code></td>
+<td>§9.5</td>
+<td>A reserved flag set in a subtype's flags or mask byte</td>
+</tr>
+<tr>
+<td><code>bad text</code></td>
+<td>§6.5, §9.6, §9.7</td>
+<td>Text outside printable ASCII, a forbidden character, over-long text, or a disallowed APRS type</td>
+</tr>
+<tr>
+<td><code>looped</code></td>
+<td>§9.3, §6.5</td>
+<td>G = 1 frame offered to APRS-IS, or a MeshPRS-output line offered to the mesh</td>
+</tr>
+<tr>
+<td><code>nogate</code></td>
+<td>§9.3</td>
+<td>Gating field 1 or 3</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>§9.3</td>
+<td>Gating field 2 on a gateway with no test server</td>
+</tr>
+<tr>
+<td><code>not gated</code></td>
+<td>§6.7, §7.2, §8.3</td>
+<td>Query, neighbour report, or telemetry kind 0x05 / 0x10</td>
+</tr>
+<tr>
+<td><code>no position</code></td>
+<td>§8.1</td>
+<td>Weather without a position</td>
+</tr>
+<tr>
+<td><code>text profile</code></td>
+<td>§9.7</td>
+<td>Compact text frame (not gated in 1.0)</td>
+</tr>
+<tr>
+<td><code>untrusted</code></td>
+<td>§4.3</td>
+<td>Source callsign not bound</td>
+</tr>
+<tr>
+<td><code>no key</code></td>
+<td>§4.3</td>
+<td>No key prefix</td>
+</tr>
+<tr>
+<td><code>key mismatch</code></td>
+<td>§4.3</td>
+<td>Key prefix does not match the binding</td>
+</tr>
+<tr>
+<td><code>unknown ack</code></td>
+<td>§6.2</td>
+<td>Ack matching no message record</td>
+</tr>
+<tr>
+<td><code>replayed</code></td>
+<td>§9.3.1</td>
+<td>Older seq within 10 min</td>
+</tr>
+<tr>
+<td><code>replayed (older advert)</code></td>
+<td>profile 0</td>
+<td>Advert timestamp older than the last</td>
+</tr>
+<tr>
+<td><code>no fix</code></td>
+<td>§5.3</td>
+<td>Profile 0 validity check</td>
+</tr>
+<tr>
+<td><code>out of range</code></td>
+<td>§5.3</td>
+<td>Profile 0 validity check</td>
+</tr>
+<tr>
+<td><code>0,0</code></td>
+<td>§5.3</td>
+<td>Profile 0 validity check</td>
+</tr>
+<tr>
+<td><code>stale</code></td>
+<td>§5.3</td>
+<td>Profile 0 validity check</td>
+</tr>
+<tr>
+<td><code>duplicate</code></td>
+<td>§10.2, §6.5</td>
+<td>Same (identity, seq) within 10 min, or an extra APRS retry</td>
+</tr>
+<tr>
+<td><code>interval</code></td>
+<td>§10.1</td>
+<td>Per-station interval (per station and service)</td>
+</tr>
+<tr>
+<td><code>queue full</code></td>
+<td>§10.1</td>
+<td>Queue bound reached</td>
+</tr>
+<tr>
+<td><code>rate</code></td>
+<td>§10.1</td>
+<td>Global rate limit</td>
+</tr>
+<tr>
+<td><code>expired</code></td>
+<td>§10.1</td>
+<td>Not sent within 15 s of receipt</td>
+</tr>
+<tr>
+<td><code>addressee not heard</code></td>
+<td>§6.5</td>
+<td>APRS → mesh: addressee has sent no MeshPRS frame heard here in the last hour</td>
+</tr>
+<tr>
+<td><code>sender on mesh</code></td>
+<td>§6.5</td>
+<td>APRS → mesh: the APRS sender was heard on the mesh in the last hour</td>
+</tr>
+<tr>
+<td><code>addressee on IS</code></td>
+<td>§6.5</td>
+<td>APRS → mesh: the addressee was heard via APRS-IS in the last hour</td>
+</tr>
+<tr>
+<td><code>path excluded</code></td>
+<td>§6.5</td>
+<td>APRS → mesh: <code>TCPXX</code>, <code>NOGATE</code> or <code>RFONLY</code> in the path</td>
+</tr>
+<tr>
+<td><code>airtime</code></td>
+<td>§6.5</td>
+<td>APRS → mesh: over the gateway's airtime budget</td>
+</tr>
+<tr>
+<td><code>blocked</code></td>
+<td>§14</td>
+<td>Blocklist</td>
+</tr>
+<tr>
+<td><code>no path</code></td>
+<td>§6.5, §12.2</td>
+<td>APRS → mesh: no known direct path (never flooded)</td>
+</tr>
+<tr>
+<td><code>id clash</code></td>
+<td>§6.5</td>
+<td>Derived msgno already live for that addressee</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="16-open-questions">16. Open questions</h2>
+<h3 id="161-size-summary">16.1 Size summary</h3>
+<p>All figures were verified by script (Annex A). On air is from the sender with no path; add 2 bytes per SEQ hop.</p>
+<p>The compact text columns use the node name <code>VK4ABC Mobile</code> (13 characters) on every row, with the row's own SRC. They are informative only, since compact text is not gated in 1.0 (§9.7).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Subtype (example)</th>
+<th>Blob N</th>
+<th>On air</th>
+<th>APRS info</th>
+<th>APRS-IS line</th>
+<th>Compact text</th>
+<th>Text on air</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00 Position, K (required example)</td>
+<td>28</td>
+<td>37</td>
+<td>26</td>
+<td>53</td>
+<td>53</td>
+<td>69</td>
+</tr>
+<tr>
+<td>0x00 Position, no K</td>
+<td>24</td>
+<td>37</td>
+<td>26</td>
+<td>53</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x00 Position, K + alt + course/speed</td>
+<td>26</td>
+<td>37</td>
+<td>36</td>
+<td>65</td>
+<td>65</td>
+<td>85</td>
+</tr>
+<tr>
+<td>0x01 Message, 20 characters</td>
+<td>36</td>
+<td>53</td>
+<td>33</td>
+<td>60</td>
+<td>60</td>
+<td>85</td>
+</tr>
+<tr>
+<td>0x01 Message, 67 characters</td>
+<td>83</td>
+<td>101</td>
+<td>80</td>
+<td>107</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x02 Ack</td>
+<td>13</td>
+<td>21</td>
+<td>15</td>
+<td>43</td>
+<td>43</td>
+<td>53</td>
+</tr>
+<tr>
+<td>0x01 Message injected from APRS-IS (G = 1)</td>
+<td>38</td>
+<td>53</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x02 Ack of the injected message</td>
+<td>13</td>
+<td>21</td>
+<td>18</td>
+<td>45</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x03 Telemetry values</td>
+<td>17</td>
+<td>37</td>
+<td>34</td>
+<td>63</td>
+<td>63</td>
+<td>85</td>
+</tr>
+<tr>
+<td>0x03 Telemetry PARM</td>
+<td>46</td>
+<td>69</td>
+<td>52</td>
+<td>81</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x04 Weather with position</td>
+<td>27</td>
+<td>37</td>
+<td>48</td>
+<td>78</td>
+<td>78</td>
+<td>101</td>
+</tr>
+<tr>
+<td>0x05 Object</td>
+<td>39</td>
+<td>53</td>
+<td>52</td>
+<td>79</td>
+<td>79</td>
+<td>101</td>
+</tr>
+<tr>
+<td>0x06 Bulletin</td>
+<td>38</td>
+<td>53</td>
+<td>38</td>
+<td>65</td>
+<td>65</td>
+<td>85</td>
+</tr>
+<tr>
+<td>0x07 Query, directed</td>
+<td>16</td>
+<td>37</td>
+<td>17</td>
+<td>45</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x07 Query, <code>?IGATE?</code></td>
+<td>10</td>
+<td>21</td>
+<td>7</td>
+<td>35</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x08 Neighbour report, 4 entries</td>
+<td>26</td>
+<td>37</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x09 Status</td>
+<td>29</td>
+<td>37</td>
+<td>20</td>
+<td>47</td>
+<td>47</td>
+<td>69</td>
+</tr>
+<tr>
+<td>0x09 Emergency with position</td>
+<td>32</td>
+<td>53</td>
+<td>46</td>
+<td>73</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Text on air</strong> is <code>5 + 16·⌈(5 + L)/16⌉</code> for L bytes of <code>name: text</code> (4-byte timestamp + 1-byte type + text; the NUL is not counted, F§1.4).</p>
+<h3 id="162-decisions">16.2 Decisions</h3>
+<p>Every question in <a href="OPEN-QUESTIONS.md">OPEN-QUESTIONS.md</a> is answered. The records:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Decides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="spec/decisions/0001-tier-a-carrier-grp-data.md">0001</a></td>
+<td>Tier A carrier: GRP_DATA on a dedicated channel, GRP_TXT compact text as fallback</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0002-subtype-table.md">0002</a></td>
+<td>Subtype table</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0003-regulatory-rules.md">0003</a></td>
+<td>Regulatory: nothing from the mesh to amateur RF in 1.0</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0004-key-prefix-required-for-gating.md">0004</a></td>
+<td>K (key prefix) required for gating</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0005-trust-lists.md">0005</a></td>
+<td>Trust lists: owner's list plus club-signed list, per gateway</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0006-polled-telemetry-exception.md">0006</a></td>
+<td>Profile-0 polled-telemetry exception</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0007-scope-1-0.md">0007</a></td>
+<td>Scope of 1.0 (required and optional subtypes)</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0011-airtime-budget.md">0011</a></td>
+<td>Airtime budget and rate limits</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0012-trial-identifiers.md">0012</a></td>
+<td>Trial identifiers: <code>#meshprs</code>, data type 0xFF4D, tocall <code>APZKPG</code></td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0013-trial-pass-criteria.md">0013</a></td>
+<td>Field-trial pass criteria</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0014-name.md">0014</a></td>
+<td>Name</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0017-rendering-gaps.md">0017</a></td>
+<td>Rendering gaps found while writing the vectors</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0018-interval-per-service.md">0018</a></td>
+<td>Interval per service</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0020-publish-1-0-candidate.md">0020</a></td>
+<td>1.0 Candidate, header version 1, publication, licence and review</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0021-wire-format-fixed.md">0021</a></td>
+<td>Wire format: big-endian callsigns, 24-bit positions, 8-bit telemetry</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0022-messaging-acks-and-g-frames.md">0022</a></td>
+<td>End-to-end acks; G = 1 senders shown as unverified</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a></td>
+<td>Receive time authoritative; compact text <code>MPRS</code>, mesh-only</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a></td>
+<td>Emergency local alert, 120 s minimum beacon interval, bulletin schedule</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a></td>
+<td>Gateway roles and directions; deferrals</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0026-signatures-later.md">0026</a></td>
+<td>No signed frames in 1.0</td>
+</tr>
+</tbody>
+</table></div>
+<p>Records 0008-0010, 0015, 0016 and 0019 are about the reference implementation (Kelly Page), not the standard.</p>
+<h3 id="163-future-work">16.3 Future work</h3>
+<p>Left for later versions. Each one is an extension: the reserved values they would use stay reserved in 1.0.</p>
+<ul>
+<li>Gating to and from amateur RF (145.175 MHz, LoRa APRS 433.775 MHz), with its identification rules (decisions <a href="spec/decisions/0003-regulatory-rules.md">0003</a>, <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</li>
+<li>Signed frames or signed binding claims, and with them gating compact text (decisions <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>, <a href="spec/decisions/0026-signatures-later.md">0026</a>).</li>
+<li>A higher-precision position, signalled by pflags bit 7 (decision <a href="spec/decisions/0021-wire-format-fixed.md">0021</a>).</li>
+<li>Wider telemetry values, and a telemetry profile registry that would enable kinds 0x05 and 0x10 (decisions <a href="spec/decisions/0021-wire-format-fixed.md">0021</a>, <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</li>
+<li>Passing an APRS message sender's position into the mesh, and messaging between mesh islands through APRS-IS (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</li>
+<li>A Room Server bulletin-agent role (decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>).</li>
+<li>A Meshtastic sister profile (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</li>
+<li>A registered GRP_DATA data type and tocall (decision <a href="spec/decisions/0012-trial-identifiers.md">0012</a>).</li>
+<li>Tier B firmware features (Annex C).</li>
+</ul>
+<hr />
+<h2 id="annex-a-verification-of-the-examples">Annex A: Verification of the examples</h2>
+<p>Every hex dump, byte count, on-air size, APRS line length, channel key and hash in this specification was produced by one throwaway script, and every frame was decoded back (round trip). The script was run 2026-10-29 with CPython 3.14. The examples are the first entries of <code>test-vectors/frames.json</code> (§15). When the header moved to version 1, every example was checked again against those vectors on 2026-10-30, by both reference codecs (<code>meshprs.js</code> and <code>meshprs.py</code>). The script is not kept in the repository.</p>
+<p>The script also checks:</p>
+<ul>
+<li>that every hex run printed in this document is a byte sequence of one of the frames it built;</li>
+<li>the M17 example <code>AB1CD</code> = <code>0x9FDD51</code>;</li>
+<li>that the integer rendering rules of §10.3 match floating-point rendering on 20,002 random positions;</li>
+<li>airtime with MeshCore's 32-symbol preamble.</li>
+</ul>
+<p>Caveats:</p>
+<ul>
+<li>The node key prefix <code>02 F9 52 3D</code> and the neighbour prefixes are illustrative, not real nodes.</li>
+<li>The weather and object coordinates are illustrative.</li>
+<li>Examples without K (the message, telemetry and weather frames, among others) are shown short for clarity. Under §4.3 they would be mesh-only.</li>
+<li><strong>Seq values are illustrative.</strong> VK4ABC's position (0x2A) and VK4ABC-9's (0x2B) both set K with one key, so they are consecutive in that key's single sequence space. VK4ABC-3's telemetry (0x2A) has no K and so has its own space.</li>
+</ul>
+<h2 id="annex-b-field-mapping-tables">Annex B: Field mapping tables</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Frame field</th>
+<th>APRS field</th>
+<th>Conversion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>source (header)</td>
+<td>TNC2 source</td>
+<td>Text as encoded; validated (§4.2)</td>
+</tr>
+<tr>
+<td>(none)</td>
+<td>destination</td>
+<td>Tocall <code>APZKPG</code> (§11)</td>
+</tr>
+<tr>
+<td>(none)</td>
+<td>path</td>
+<td><code>qAO,IGATECALL</code></td>
+</tr>
+<tr>
+<td>Position lat/lon</td>
+<td><code>DDMM.mmH</code> / <code>DDDMM.mmH</code></td>
+<td>Integer rule of §10.3 (same output as Kelly <code>fmtLat</code> / <code>fmtLon</code>), with ambiguity blanking</td>
+</tr>
+<tr>
+<td>Position symbol</td>
+<td>Table and code characters</td>
+<td>Unchanged</td>
+</tr>
+<tr>
+<td>pflags MSG</td>
+<td>DTI <code>!</code> or <code>=</code></td>
+<td>MSG set → <code>=</code></td>
+</tr>
+<tr>
+<td>course, speed</td>
+<td><code>ccc/sss</code></td>
+<td>§10.3: course 0 → 360; km/h → knots</td>
+</tr>
+<tr>
+<td>alt</td>
+<td><code>/A=nnnnnn</code></td>
+<td>§10.3: m → feet, 6 characters</td>
+</tr>
+<tr>
+<td>comment</td>
+<td>Comment</td>
+<td>§10.3: extension + altitude + comment ≤ 43</td>
+</tr>
+<tr>
+<td>Message addressee, msgno, text</td>
+<td><code>:ADDRESSEE:text{ID</code></td>
+<td>Addressee padded to 9; ID = decimal msgno; no <code>{ID</code> when msgno is 0</td>
+</tr>
+<tr>
+<td>Ack to, msgno, kind</td>
+<td><code>:TO       :ackID</code> / <code>rejID</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Telemetry values</td>
+<td><code>T#sss,a1,…,a5,bbbbbbbb</code></td>
+<td>sss = header seq; a = 3 digits; empty slot for a missing analog</td>
+</tr>
+<tr>
+<td>Telemetry kinds 1-4</td>
+<td><code>:SRC      :PARM.</code> / <code>UNIT.</code> / <code>EQNS.</code> / <code>BITS.</code></td>
+<td>Text unchanged</td>
+</tr>
+<tr>
+<td>Weather fields</td>
+<td><code>_ddd/sssgGGGtTTTrRRRpPPPPPPhHHbBBBBB</code></td>
+<td>Units per §8.1</td>
+</tr>
+<tr>
+<td>Object name, live, position, symbol, ts, comment</td>
+<td><code>;NAME_____*DDHHMMz…</code> / <code>_</code></td>
+<td>Name padded to 9; time per §8.2 (TS when within ±1 h of receive time, otherwise receive time), UTC, truncated to the minute</td>
+</tr>
+<tr>
+<td>Item</td>
+<td><code>)NAME!…</code> / <code>)NAME_…</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Bulletin id, group, text</td>
+<td><code>:BLNn[GROUP]:text</code></td>
+<td>Name field padded to 9</td>
+</tr>
+<tr>
+<td>Status code 8, text</td>
+<td><code>&gt;text</code></td>
+<td>≤ 62</td>
+</tr>
+<tr>
+<td>Status codes 0-7 and 9</td>
+<td>Position comment or status prefixed with the code name</td>
+<td>§8.4</td>
+</tr>
+<tr>
+<td>Query, neighbour report</td>
+<td>Never gated</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="annex-c-tier-b-future-work-needing-meshcore-firmware-changes">Annex C: Tier B: future work needing MeshCore firmware changes</h2>
+<p>Optional and informative. Stock companions already send binary GRP_DATA (Tier A), so Tier B covers only what the app layer cannot do:</p>
+<ul>
+<li><strong>RAW_CUSTOM flooding.</strong> Stock repeaters never flood RAW_CUSTOM, and companions refuse to send it flooded (F§2.1, F§2.3). A firmware change allowing it would remove the 3-byte channel overhead and the 16-byte padding, and would be cleartext on the air. Frames would keep the §9.3 header.</li>
+<li><strong>Sender authentication in group packets.</strong> A firmware-level sender key, or signature, on GRP_DATA, so a gateway can prove which node sent a frame (§4.3, decision <a href="spec/decisions/0026-signatures-later.md">0026</a>).</li>
+<li><strong>Persistent room-server posts.</strong> Flash-backed posts, more than 32 slots and longer than 151 bytes, so bulletins survive reboots (§6.6; F§3.4).</li>
+<li><strong>Multipart fragmentation.</strong> MULTIPART inner types other than ACK, for payloads larger than one frame (F§1.7). MeshPRS 1.0 deliberately needs none (§6.4).</li>
+<li><strong>Open position and telemetry.</strong> An unencrypted, unsolicited CayenneLPP or GPS beacon type, so trackers need no app layer.</li>
+</ul>
+<footer>MeshPRS 1.0 Candidate. Generated from <code>spec/MeshPRS-Spec.md</code>, which is authoritative. Text licensed under
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; credit "MeshPRS, Alec Swinton VK4AZ". Test vectors are
+<a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a>.</footer>
+</main>
+</body>
+</html>
