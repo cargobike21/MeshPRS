@@ -1,0 +1,6 @@
+title: MeshPRS
+description: "MeshPRS: APRS to MeshCore interface standard (1.0 Candidate)"
+url: https://cargobike21.github.io
+baseurl: /MeshPRS
+plugins:
+  - jekyll-sitemap
