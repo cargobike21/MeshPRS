@@ -26,6 +26,7 @@ META = [
     ("Frame version", "1 (layout frozen; version 0 accepted until 1.0 final)"),
     ("Identifiers", "MeshCore channel <code>#meshprs</code>, GRP_DATA type <code>0xFF4D</code>, tocall <code>APZKPG</code>"),
     ("Licence", "Text CC BY 4.0; test vectors CC0 1.0"),
+    ("Comments", "<a href=\"https://github.com/cargobike21/MeshPRS/issues\">github.com/cargobike21/MeshPRS/issues</a>"),
 ]
 
 CSS = """

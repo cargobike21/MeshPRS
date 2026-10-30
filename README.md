@@ -14,7 +14,7 @@ This is the **MeshPRS 1.0 Candidate**, open for public comment.
   - the field trial meets its pass criteria (decision 0013);
   - review comments from MBUG, the APRS-IS operators and the MeshCore developers are answered.
 
-Comments, questions and implementation reports are welcome as issues on this repository.
+Comments, questions and implementation reports are welcome as [issues](https://github.com/cargobike21/MeshPRS/issues) on [github.com/cargobike21/MeshPRS](https://github.com/cargobike21/MeshPRS).
 
 ## Start here
 
