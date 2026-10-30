@@ -6,7 +6,7 @@ The name follows D-PRS, D-STAR's position reporting into APRS. It stands for *Me
 
 ## Status: 1.0 Candidate
 
-This is the **MeshPRS 1.0 Candidate**, open for public comment.
+This is the **MeshPRS 1.0 Candidate**, open for public comment. **Read it online:** [cargobike21.github.io/MeshPRS/MeshPRS-Spec.html](https://cargobike21.github.io/MeshPRS/MeshPRS-Spec.html).
 - The frame layout is frozen: header version 1, GRP_DATA data type 0xFF4D on the `#meshprs` channel.
 - Between now and 1.0 final, changes are limited to clarifications and to fixes the field trial shows to be needed. Any change to the layout gets a decision record and is announced here.
 - 1.0 final follows once:
