@@ -49,3 +49,15 @@ Section references (§) are to `spec/MeshPRS-Spec.md`.
 - **Q29. Sender positions into the mesh.** **→ Decided in 0025** (future work). Should a later version pass an APRS message sender's next position into the mesh, as IS → RF iGates do, and if so, how is it encoded?
 - **Q30. Mesh island to island.** **→ Decided in 0025** (future work; the §6.5 loop rule stays). Should two separate meshes be able to message each other through APRS-IS?
 - **Q31. Profile-0 polled telemetry.** **→ Decided in 0006.** Accept the narrow exception in §7.1 (a gateway's own polls of its owner's own nodes) or drop it?
+
+## Raised by the first bike ride (2026-10-31)
+
+- **Q32. Minimum beacon interval for mobiles.** **→ Decided in 0027** (120 s default; 60 s allowed for a mobile in patchy coverage). §5.5 said 60 s, 0024 said 120 s; the ride showed 60 s fills APRS-IS gaps at 69 % delivery.
+- **Q33. Status retry.** **→ Decided in 0027** (one retry at 60-90 s). A plain status has no ack; 2 of 4 were lost on the ride.
+- **Q34. T7 live-test rate.** **→ Decided in 0027** (the gateway's per-station interval). 1 per 5 min can't show a mobile track.
+- **Q35. Gateway log.** **→ Decided in 0027** (SHOULD keep a per-frame log for 24 h, §10.4). Should gateways keep a standard per-frame record?
+- **Q36. First-hop coverage.** **→ Decided in 0027** (measured ranges in reliability.md §2.8). How far does a mobile reach its first repeater?
+
+## Raised by the parked tracker (2026-10-31)
+
+- **Q37. How often to repeat an unchanged status and the telemetry definitions.** **→ Decided in 0028** (at start, on change and on query; otherwise no more often than every 6 h, 12 h for a battery station; the status retry only for a new status). A parked Mesh Buddy 1.0 spent about half its airtime repeating them.

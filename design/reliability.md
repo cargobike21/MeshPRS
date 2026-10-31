@@ -166,6 +166,30 @@ Hop counts of floods heard at VK4AZ on 2026-10-25 (one malformed 60-hop PATH pac
 
 So **a flood in SEQ is retransmitted by dozens of repeaters**, R ≈ 30-80 [model, from the hash count].
 
+### 2.8 A mobile's first hop [measured]
+
+**Test:** a bike tracker (RAK4631, 22 dBm, stock antenna at bike height, SF8 / 62.5 kHz) flooding a position frame at most every 60 s, on a 92 min ride through Bulimba and Hawthorne on 2026-10-31. Heard by one home-node iGate at VK4AZ (decision 0027).
+- **Delivery:** 47 of 68 frames reached the iGate (**69 %**).
+- **Hop counts:** of the frames that arrived, 46 came 3 hops or fewer (0 hops: 3, 1: 16, 2: 23, 3: 4, 5: 1). The losses were at the **first hop**, bike to repeater, not along the mesh.
+- **Losses cluster:** after a lost frame, the next (60 s later) was lost 48 % of the time, against 31 % overall. A bad spot costs several frames in a row.
+- **Distance didn't decide delivery.**
+  - 2-3 km south: 11 of 14 frames got through, carried by third-party repeaters.
+  - A 1-1.5 km stretch north, behind buildings and a low rise: only 7 of 21.
+  - An RF model (knife-edge over GLO-90 terrain plus suburban clutter) predicted a +12 dB margin there. That isn't enough for a low, moving antenna.
+
+First-hop links measured (the repeater that heard the frame first, so the fastest path, not every repeater that heard it):
+
+| First repeater | Where | Frames | Median link | Longest link |
+|---|---|---|---|---|
+| VK4AZ Rpt (`fbae`) | roof, 10 m from the iGate | 16 | 0.73 km | 1.9 km |
+| Timelineal (`bc40`) | 3-4 km SW of the iGate | 15 | 2.8 km | 5.0 km |
+| VK4KHP Spring Hill (`9b80`) | ~3 km W | 6 | 2.7 km | 3.2 km |
+| Metrokab (`6790`) | no position advertised | 4 | – | – |
+| A42 T114 (`cefa`) | beside the route | 2 | 0.14 km | 0.16 km |
+| The home node itself, direct | indoors | 3 | 0.23 km | 0.23 km |
+
+**What follows:** for a mobile, "an iGate within 3 hops" (§4.1) is necessary but not sufficient. The mobile also needs a well-sited repeater within about 2-3 km wherever it goes (up to 5 km for a good hilltop).
+
 ---
 
 ## 3. What a flood costs
@@ -206,6 +230,7 @@ These are proposals; each needs Alec's decision, and some need MBUG's.
 
 - **Target:** every MeshPRS originator's traffic reaches at least one iGate in **≤ 3 hops**. At p = 0.9 that is 73 % one-way, against 53 % at 6 hops. Round trip with 3 tries is 90 %, against 63 %.
 - **Where to put iGates:** sites already heard by many repeaters, measured by flood reach, not by map. Brisbane hilltops first, then the Gold and Sunshine Coasts and Ipswich. A home-node iGate (like VK4AZ, which hears most traffic via one repeater, `fbae`) is a leaf, not a hub.
+- **Mobiles also need first-hop coverage:** a repeater within about 2-3 km of the route (§2.8). Where one is missing, no iGate placement helps. The fix is a repeater, or a better antenna on the mobile.
 - **More than one iGate is good,** not a problem: APRS-IS removes the duplicates provided every iGate renders **byte-identical** APRS text for the same frame (spec §10.3).
 
 ### 4.2 Routing: direct after first contact, flood as the fallback

@@ -119,7 +119,7 @@ Three ways, in order of fidelity:
 
 ### 5.1 Packet loss: sequence numbers and sample size
 
-- Every frame carries a per-source sequence number and a retry counter (spec §9.3). The sink logs `(src, seq, retry, rxAt, path, snr, rssi)` for every copy it hears.
+- Every frame carries a per-source sequence number and a retry counter (spec §9.3). The sink logs `(src, seq, retry, rxAt, path, snr, rssi)` for every copy it hears. A gateway's diagnostic log (spec §10.4) has these fields plus the verdict, so each iGate in a trial is also a sink.
 - **Delivery** = unique `(src, seq)` received ÷ `seq` values sent, taken from the originator's own send log. Don't infer the sent count from gaps in the received seq: a lost run at the end looks like no loss.
 - **Sample size.** For a 95 % interval of ±E around p: `n = 1.96² · p(1−p) / E²`.
 
@@ -186,7 +186,7 @@ At each iGate and trial repeater, log the channel for ≥ 2 h before the trial, 
 Only after T5 and T6 pass.
 - **Identity:** a dedicated SSID for the test source, not one in daily use. The iGate's own call-SSID, tocall `APZKPG` (experimental range, unallocated [source §4.4]), `qAO`.
 - **Content:** the position is the station's real location. A status or comment says it is a MeshPRS test.
-- **Rate and length:** ≤ 1 packet per 5 min per source, for ≤ 2 h, with a stated start and end. Alec is watching aprs.fi live with a stop switch: the iGate's gate-to-IS can be turned off without stopping the mesh side.
+- **Rate and length:** at most the gateway's per-station interval (one position per source per 2 min, spec §10.1 step 6), for ≤ 2 h, with a stated start and end. A mobile track can't be judged at 5 min spacing (decision 0027). Alec is watching aprs.fi live with a stop switch: the iGate's gate-to-IS can be turned off without stopping the mesh side.
 - **Pass:** each frame appears once on aprs.fi with the right source, symbol and position; no duplicates; nothing from the test flag leaks; the raw packets match the private-server run byte for byte, apart from the q-construct.
 
 ## 7. Pass criteria for the field trial (decision 0013)

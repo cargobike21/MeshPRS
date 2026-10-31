@@ -205,7 +205,8 @@ A station sending position frames SHOULD beacon when any one of these holds sinc
 | Time since last beacon | 30 min | The maximum interval; also the beacon rate when stationary |
 
 Rules on top of the triggers:
-- **Minimum interval:** a station MUST NOT beacon more often than its minimum interval. The default is 60 s, and it MUST NOT be set below 30 s. A trigger inside the minimum interval waits until the interval expires.
+- **Minimum interval:** a station MUST NOT beacon more often than its minimum interval. The default is 120 s, and it MUST NOT be set below 30 s. A trigger inside the minimum interval waits until the interval expires.
+- **Mobiles in patchy coverage:** a moving station MAY use a 60 s minimum where coverage is patchy. Gateways pass at most one position per station every 2 min (§10.1 step 6), so the extra frames add no APRS-IS lines. They replace lost frames before the gateway's interval runs out, which keeps the track continuous. On the 2026-10-31 bike ride, with 69 % of frames delivered, a 60 s minimum gave 26 positions on APRS-IS where 120 s would have given 19-21 (decision 0027). It doubles the station's flood airtime, so it suits a few mobiles, not a whole region.
 - **Configurable:** all four values SHOULD be configurable.
 - **Fixed stations:** a station that does not move SHOULD rely on its advert position (§5.4) and SHOULD NOT send position frames, apart from one in reply to a query (§6.7) or when it changes symbol or comment. Adverts already flood and are already gated in profile 0, so a beacon frame only adds airtime (SA-8, `../design/reliability.md`).
 
@@ -218,7 +219,7 @@ Rules on top of the triggers:
 | 53 bytes | 468 ms |
 | 101 bytes | 714 ms |
 
-A flood costs that once per repeater that relays it. The network-wide budget is decision 0011, and the defaults above are decision 0024; `../design/reliability.md` has the full table.
+A flood costs that once per repeater that relays it. The network-wide budget is decision 0011, the defaults above are decision 0024, and the mobile 60 s option is decision 0027; `../design/reliability.md` has the full table.
 
 ### 5.6 APRS → mesh
 
@@ -444,7 +445,7 @@ Until a profile registry exists, a gateway MUST NOT gate kinds 0x05 and 0x10 (`n
 
 - The APRS `T#` sequence is the header seq as three decimal digits (000-255). Every gateway therefore produces the same line, so APRS-IS's duplicate filter merges copies (§10.3).
 - A gateway converts kinds 1-4 into the APRS messages a station sends to itself: `:SRC      :PARM.…`, with the source padded to 9 characters (F§4.5).
-- A station SHOULD send its definitions (or profile ID) when it starts, when they change, in reply to query 0x04, and otherwise at most every 6 h.
+- A station SHOULD send its definitions (or profile ID) when it starts, when they change and in reply to query 0x04. It SHOULD NOT repeat unchanged definitions more often than every 6 h, and a battery station SHOULD repeat them every 12 h (decision 0028). APRS-IS clients keep a station's last definitions, so a repeat only serves a gateway that started since.
 - A gateway passes a station's definitions on to APRS-IS as received. Until it has received them, it gates the values only, which APRS shows unscaled.
 - Analog values are 8-bit (decision 0021). Wider values may come later as a new kind from the reserved range.
 
@@ -594,6 +595,14 @@ Direction 1 (they heard me): `DISCOVER_RESP`, which carries the SNR at which eac
 - Codes 0-7 and 9 with a position become a position report with the symbol `/>` (the frame carries none; decision 0017), whose comment starts with the code's name in capitals, for example `!2728.08S/15301.41E>EMERGENCY Vehicle rollover` (46 bytes). Without a position they become `>NAME text`.
   - **UNVERIFIED:** whether APRS clients recognise an emergency outside Mic-E at all. Mic-E carries emergency in the destination field, which MeshPRS drops (§1.2). The comment prefix makes the emergency readable by people, though APRS software may not flag it (decision 0024).
 
+**Plain status retry**
+- A station SHOULD send a plain status (code 8) when it starts and when the text changes. It SHOULD NOT repeat an unchanged status more often than every 6 h, and a battery station SHOULD repeat it every 12 h (decision 0028). APRS-IS clients keep a station's last status.
+- A plain status has no ack, so one lost frame hides a new status until the next. A station SHOULD therefore send each **new** plain status (at start, after a change, or sent by hand) once more, **60-90 s** after the first, as a retry: the same frame with the retry field 1 (§9.3), same seq and text. A routine repeat of an unchanged status is not retried.
+- It MUST NOT retry it more than once.
+- Gateways collapse the two copies into one APRS-IS line (§10.2).
+- The gap is 60-90 s, not 30 s, because losses cluster. On the 2026-10-31 ride, a frame sent 60 s after a lost one was lost 48 % of the time, against 31 % overall (decision 0027). A retry needs to get past a bad spot, not land in the same one.
+- Codes 0-7 and 9 follow the emergency schedule below instead.
+
 **Emergency handling**
 - A station in emergency SHOULD send the frame every 60 s for 5 min, then every 5 min until it sends code 9.
 - **Gateway priority:**
@@ -670,7 +679,7 @@ The header is 9 bytes, or 13 with K. MeshPRS defines no hop count: the MeshCore 
 
 The two flags share one 2-bit field instead of two bits because they are mutually exclusive outcomes of one decision (where the frame may go). "Test but may go live" and "do not gate but test" mean nothing, so a field rules out the contradictory combinations, and the fourth value is spare for a later rule.
 
-**Retry (2 bits).** 0 on the first send of a frame, incremented on each retransmission of that same frame. Stations retry at most twice (§6.3) and gateways re-inject at most twice (§6.5), so value 3 is never sent in 1.0; receivers treat it like any other retry.
+**Retry (2 bits).** 0 on the first send of a frame, incremented on each retransmission of that same frame. Stations retry a message at most twice (§6.3) and a plain status once (§8.4), and gateways re-inject at most twice (§6.5), so value 3 is never sent in 1.0; receivers treat it like any other retry.
 - Every other byte of a retry is identical to the original, seq included.
 - The retry field exists because repeaters' duplicate table hashes only the payload (F§2.4), and on the SEQ mesh it remembers a payload for about 2.7 h at measured load (SA-8, `../design/reliability.md`). Without the field, a retry would never get past the nodes that carried the first copy.
 - The retry value MUST NOT affect any APRS-IS output, and gateways ignore it when removing duplicates (§10.2). Every retry of one frame therefore collapses to one APRS-IS line.
@@ -685,7 +694,7 @@ The two flags share one 2-bit field instead of two bits because they are mutuall
 - the replay check (§9.3.1).
 
 **Why 8 bits:**
-- A counter repeats only after 256 new frames. At the 120 s default minimum beacon interval (§5.5) that is 8.5 h, longer than the 2.7 h duplicate horizon.
+- A counter repeats only after 256 new frames. At the 120 s default minimum beacon interval (§5.5) that is 8.5 h, and at the 60 s a mobile may use it is 4.3 h. Both are longer than the 2.7 h duplicate horizon.
 - At the 30 s floor it is 2.1 h. A repeat then also needs every other byte to be identical, which a moving station's position never is.
 - A timestamp was rejected because node clocks are unreliable (decision 0023). A 16-bit counter would cost a byte on every frame.
 - A sender SHOULD keep its counter across reboots (in flash or app storage). One that can't MUST start at a random value.
@@ -807,7 +816,7 @@ The numbers are the network-wide figures of decision 0011.
 
 ### 10.2 Duplicates
 
-- **Mesh side:** the duplicate key is (originator identity, seq) (§9.3), **ignoring the retry field**. Subtype is not part of the key, because one counter covers every subtype. A gateway MUST treat a frame matching a key it accepted in the last 10 min as a duplicate (`duplicate`), so all retries of one frame give at most one APRS-IS line. The 127-frames-per-10-minutes limit (§9.3.1) keeps the key unambiguous.
+- **Mesh side:** the duplicate key is (originator identity, seq) (§9.3), **ignoring the retry field**. Subtype is not part of the key, because one counter covers every subtype. A gateway MUST treat a frame matching a key it accepted in the last 10 min as a duplicate (`duplicate`), so all retries of one frame give at most one APRS-IS line. The check belongs where the APRS-IS line is sent, so a restarted or second front end on the same connection can't send a frame twice (decision 0028). The 127-frames-per-10-minutes limit (§9.3.1) keeps the key unambiguous.
 - **APRS side:** a gateway MUST NOT send an APRS line with the same source, destination and info as one it sent in the last 30 s, which is the APRS-IS window (F§4.6).
 
 ### 10.3 Deterministic output (normative)
@@ -843,13 +852,28 @@ APRS-IS removes duplicates only when source, destination and info match (F§4.6)
 
 A frame received either side of a minute boundary, when its timestamp comes from receive time, can still produce two lines; this is accepted.
 
-### 10.4 Summary
+### 10.4 Diagnostic log
+
+A gateway SHOULD keep a record of every mesh-side frame it receives for at least 24 h, so that delivery, loss and latency can be measured (test plan §5, field-trial criteria P1, P2, P4 and P8). This doesn't affect interoperability, so it is not a MUST.
+- **One record per received copy,** with:
+  - the receive time;
+  - the originator (callsign-SSID and key prefix), subtype, seq and retry;
+  - the hop count and path hashes, as received;
+  - the last-hop SNR and RSSI, where the node reports them;
+  - the §10.1 verdict, either `sent` or the drop reason;
+  - the APRS-IS line sent, if any.
+- **Format:** one JSON object per line is RECOMMENDED, so that logs from different gateways can be merged for one trial.
+- **What it must not hold:** the APRS-IS passcode and any login secret. The log holds only what was already on the public MeshPRS channel and on APRS-IS.
+- **Why it matters:** sent frames are counted from seq gaps (§9.3), so the log is all a gateway needs to measure one-way delivery. Without one, the 2026-10-31 ride could only be analysed from a gateway's in-memory history (decision 0027).
+
+### 10.5 Summary
 
 The full iGate design is in [`../design/igate-design.md`](../design/igate-design.md). In summary, a MeshPRS gateway:
 - logs in to APRS-IS with its own callsign-SSID and passcode, and never with `pass -1`, which cannot send (F§4.3);
 - marks every gated packet `qAO`;
 - uses the tocall `APZKPG` (provisional, §11);
 - removes duplicates as in §10.2;
+- keeps a diagnostic log of what it heard and did (§10.4);
 - puts nothing from APRS-IS onto the mesh except what its role allows (§3.2, §6.5), and never general positions or floods.
 
 ---
