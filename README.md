@@ -34,7 +34,7 @@ A MeshCore station sends a compact binary frame (24-53 bytes on air for most ser
 
 ## Implementations
 
-- **Kelly Page** (VK4AZ): the reference implementation. A JavaScript and Python codec passing the vectors, a receive-only iGate and a position sender. Its earlier advert-based iGate is MeshPRS *profile 0*.
+- **Kelly Page** (VK4AZ): the reference implementation. A JavaScript and Python codec passing the vectors, a receive-only iGate and a position sender. Its earlier advert-based iGate is MeshPRS *profile 0*. Free for hams: download it, or try it in your browser, at [kellypage.app](https://kellypage.app).
 
 To list another implementation, open an issue.
 
