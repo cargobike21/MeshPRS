@@ -9,9 +9,9 @@ Each vector:
   "id": "pos-001",
   "spec": "§5.1",
   "about": "a fresh advert with a valid position from a trusted key is gated",
-  "input": { "kind": "advert", "key": "…", "name": "VK4AZ Tracker", "lat": -27.6152, "lon": 152.7603, "rxAt": 1793255251994 },
-  "config": { "trusted": ["…"], "igate": "VK4AZ-10" },
-  "expect": { "out": "VK4AZ-7>APZKPG,qAO,VK4AZ-10:!2736.91S/15245.62E>…" }
+  "input": { "kind": "advert", "key": "…", "name": "VK4XXX Tracker", "lat": -27.6257, "lon": 152.7666, "rxAt": 1793255251994 },
+  "config": { "trusted": ["…"], "igate": "VK4XXX-10" },
+  "expect": { "out": "VK4XXX-7>APZKPG,qAO,VK4XXX-10:!2737.54S/15246.00E>…" }
 }
 ```
 

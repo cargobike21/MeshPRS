@@ -102,7 +102,7 @@ This is the M17 address encoding, chosen so implementations can reuse M17 code a
 - **Divergences:** M17 also defines `0xFFFFFFFFFFFF` as BROADCAST and `0xEE6B28000000`-`0xFFFFFFFFFFFE` as an application range. MeshPRS rejects all values ≥ 40⁹ instead.
 - **Byte order:** it is the one big-endian field in MeshPRS; every other multi-byte integer is little-endian, like MeshCore's own. Big-endian is kept so the bytes match M17 exactly.
 
-Examples (verified by script): `VK4ABC` = `00 00 12 9F 5D 8E`; `VK4AZ-9` = `00 23 3A DD DD 8E`.
+Examples (verified by script): `VK4ABC` = `00 00 12 9F 5D 8E`; `VK4XXX-9` = `05 81 29 F1 B3 8E`.
 
 ### 4.2 Callsign rules
 
@@ -174,7 +174,7 @@ VK4ABC at −27.4680, 153.0235, car symbol `/>`, comment "Mobile", K set, seq 0x
 
 - **Blob:** N = 28 (2 AES blocks). Without K it is 24, still 2 blocks.
 - **On air:** 37 bytes from the sender, plus 2 per repeater hop in SEQ.
-- **APRS equivalent:** info field `!2728.08S/15301.41E>Mobile` is 26 bytes. The gated line `VK4ABC>APZKPG,qAO,VK4AZ-10:!2728.08S/15301.41E>Mobile` is 53 bytes plus CR/LF.
+- **APRS equivalent:** info field `!2728.08S/15301.41E>Mobile` is 26 bytes. The gated line `VK4ABC>APZKPG,qAO,VK4XXX-10:!2728.08S/15301.41E>Mobile` is 54 bytes plus CR/LF.
 - **Compact text (§9.7):** `VK4ABC Mobile: MPRS VK4ABC !2728.08S/15301.41E>Mobile` is 53 bytes of the 160, and 69 bytes on air.
 
 **Second example**, with K, ALT 45 m, CSE 90° at 60 km/h, no comment, from VK4ABC-9: `50 00 2B 05 80 A6 53 5D 8E 02 F9 52 3D 35 EF D8 14 D1 6C 2F 3E 03 2D 00 40 3C`.
@@ -238,16 +238,16 @@ APRS-IS positions MUST NOT be put onto the mesh in 1.0 (§3.2). That includes a 
 | msgno | u8 | 1 | 1-127. 0 = no ack wanted (an APRS message with no `{ID`). 128-255 reserved; bit 7 is the rej flag in acks |
 | text | ASCII | rest, 1-67 | Printable 0x20-0x7E. MUST NOT contain `{`, `\|` or `~` |
 
-**Example:** VK4ABC → VK4AZ-9, msgno 7, "Meet at Ipswich 1300".
+**Example:** VK4ABC → VK4XXX-9, msgno 7, "Meet at Ipswich 1300".
 
 ```
-00: 40 01 2C 00 00 12 9F 5D 8E 00 23 3A DD DD 8E 07
+00: 40 01 2C 00 00 12 9F 5D 8E 05 81 29 F1 B3 8E 07
 10: 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20
 20: 31 33 30 30
 ```
 
 - **Blob:** N = 36 (3 blocks), 53 bytes on air. Text up to 13 characters keeps N ≤ 29; up to 29 characters keeps N ≤ 45.
-- **APRS:** `:VK4AZ-9  :Meet at Ipswich 1300{7` (33 bytes); the gated line is 60 bytes.
+- **APRS:** `:VK4XXX-9 :Meet at Ipswich 1300{7` (33 bytes); the gated line is 61 bytes.
 - **Maximum message:** 67 characters gives N = 83 and 101 bytes on air, which is well inside the 165-byte blob limit.
 
 ### 6.2 Ack (subtype 0x02)
@@ -265,9 +265,9 @@ Without K an ack is 13 bytes: **one AES block, 21 bytes on air**.
 - **Trust exception to §4.3:** a gateway MAY gate an ack without K when it matches such a record and its source is that message's addressee. The exception waives **only the key-prefix check**: the ack's source callsign MUST still be bound (§4.3 step 2), otherwise it is dropped (`untrusted`). An ack only confirms delivery, and requiring K would push every ack to 17 bytes.
 - **Re-acks:** when a station acks another copy of the same message (§6.3), it sends a **retry of its first ack frame** (same seq, retry field incremented), not a new frame.
 
-**Example:** VK4AZ-9 acks VK4ABC's msgno 7, sent with seq 0x2C (§6.1): `40 02 11 00 23 3A DD DD 8E 2C 07 75 E7`.
+**Example:** VK4XXX-9 acks VK4ABC's msgno 7, sent with seq 0x2C (§6.1): `40 02 11 05 81 29 F1 B3 8E 2C 07 75 E7`.
 - Blob N = 13 (1 block), 21 bytes on air.
-- APRS: `:VK4ABC   :ack7` (15 bytes); the gated line is 43 bytes.
+- APRS: `:VK4ABC   :ack7` (15 bytes); the gated line is 45 bytes.
 
 ### 6.3 IDs, retries and duplicates
 
@@ -375,8 +375,8 @@ Durable storage would need firmware changes (Annex C).
 The APRS analogues are for orientation only. `?APRS?` and `?IGATE?` come from the findings (F§4.2, F§4.6); `?APRSP` and `?APRSS` are **UNVERIFIED** (not yet in the research notes).
 
 **Examples:**
-- Directed position query from VK4AZ-9 to VK4ABC: `40 07 12 00 23 3A DD DD 8E 81 00 00 12 9F 5D 8E`. N = 16, 37 bytes on air. Compare `:VK4ABC   :?APRSP` (17 bytes).
-- `?IGATE?`: `40 07 13 00 23 3A DD DD 8E 02`. N = 10 (1 block), 21 bytes on air.
+- Directed position query from VK4XXX-9 to VK4ABC: `40 07 12 05 81 29 F1 B3 8E 81 00 00 12 9F 5D 8E`. N = 16, 37 bytes on air. Compare `:VK4ABC   :?APRSP` (17 bytes).
+- `?IGATE?`: `40 07 13 05 81 29 F1 B3 8E 02`. N = 10 (1 block), 21 bytes on air.
 
 **Rules**
 - A responder to an undirected query MUST wait a random 0-30 s before replying.
@@ -472,15 +472,15 @@ After the header comes a 16-bit presence mask (u16 LE), then each present field 
 | 10 | luminosity | u16 | 2 | W/m² | `Lnnn` / `lnnn` |
 | 11-15 | reserved | | | | |
 
-**Example:** VK4ABC-13 at −27.6150, 152.7600 (illustrative), wind 90° at 3.0 m/s gusting 5.5, 24.5 °C, 65 %, 1013.2 hPa, no rain in the last hour.
+**Example:** VK4ABC-13 at −27.6255, 152.7663 (illustrative), wind 90° at 3.0 m/s gusting 5.5, 24.5 °C, 65 %, 1013.2 hPa, no rain in the last hour.
 
 ```
-00: 40 04 05 B7 1F D7 53 5D 8E FF 00 AF B9 D8 1C A1
+00: 40 04 05 B7 1F D7 53 5D 8E FF 00 DD B5 D8 42 A2
 10: 6C 40 06 0B F5 00 41 94 27 00 00
 ```
 
 - **Blob:** N = 27 (2 blocks), 37 bytes on air.
-- **APRS:** `!2736.90S/15245.60E_090/007g012t076r000h65b10132` (48 bytes); the line is 78 bytes.
+- **APRS:** `!2737.53S/15245.98E_090/007g012t076r000h65b10132` (48 bytes); the line is 78 bytes.
 
 **Conversion**
 - Units: m/s × 2.236936 → mph; °C × 9/5 + 32 → °F; mm ÷ 0.254 → hundredths of an inch. Each is rounded.
@@ -508,12 +508,12 @@ After the header comes a 16-bit presence mask (u16 LE), then each present field 
 
 ```
 00: 40 05 30 00 00 12 9F 5D 8E 61 49 50 53 52 50 54
-10: AF B9 D8 1C A1 6C 2F 72 31 34 37 2E 30 30 30 4D
+10: DC B5 D8 42 A2 6C 2F 72 31 34 37 2E 30 30 30 4D
 20: 48 7A 20 2D 30 36 30
 ```
 
 - **Blob:** N = 39, 53 bytes on air.
-- **APRS:** `;IPSRPT   *291030z2736.90S/15245.60Er147.000MHz -060` (52 bytes); the line is 79 bytes.
+- **APRS:** `;IPSRPT   *291030z2737.53S/15245.98Er147.000MHz -060` (52 bytes); the line is 80 bytes.
 
 **Conversion**
 - **Timestamp source.** Objects are always timestamped on APRS (F§4.5).

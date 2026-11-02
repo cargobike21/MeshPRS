@@ -6,8 +6,8 @@
    "00 00 12 9F 5D 8E"
   ],
   [
-   "VK4AZ-9",
-   "00 23 3A DD DD 8E"
+   "VK4XXX-9",
+   "05 81 29 F1 B3 8E"
   ],
   [
    "AB1CD",
@@ -186,8 +186,8 @@
   {
    "id": "msg-001",
    "spec": "§6.1",
-   "about": "VK4ABC to VK4AZ-9, msgno 7, no K",
-   "hex": "40 01 2C 00 00 12 9F 5D 8E 00 23 3A DD DD 8E 07 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20 31 33 30 30",
+   "about": "VK4ABC to VK4XXX-9, msgno 7, no K",
+   "hex": "40 01 2C 00 00 12 9F 5D 8E 05 81 29 F1 B3 8E 07 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20 31 33 30 30",
    "decode": {
     "version": 1,
     "g": 0,
@@ -198,7 +198,7 @@
     "seq": 44,
     "src": "VK4ABC",
     "key": null,
-    "to": "VK4AZ-9",
+    "to": "VK4XXX-9",
     "msgno": 7,
     "text": "Meet at Ipswich 1300"
    }
@@ -206,8 +206,8 @@
   {
    "id": "ack-001",
    "spec": "§6.2",
-   "about": "VK4AZ-9 acks msgno 7 (seq 0x2C); one AES block",
-   "hex": "40 02 11 00 23 3A DD DD 8E 2C 07 75 E7",
+   "about": "VK4XXX-9 acks msgno 7 (seq 0x2C); one AES block",
+   "hex": "40 02 11 05 81 29 F1 B3 8E 2C 07 75 E7",
    "decode": {
     "version": 1,
     "g": 0,
@@ -216,7 +216,7 @@
     "retry": 0,
     "subtype": 2,
     "seq": 17,
-    "src": "VK4AZ-9",
+    "src": "VK4XXX-9",
     "key": null,
     "ackSeq": 44,
     "msgno": 7,
@@ -293,7 +293,7 @@
    "id": "obj-001",
    "spec": "§8.2",
    "about": "live object IPSRPT, repeater symbol",
-   "hex": "40 05 30 00 00 12 9F 5D 8E 61 49 50 53 52 50 54 AF B9 D8 1C A1 6C 2F 72 31 34 37 2E 30 30 30 4D 48 7A 20 2D 30 36 30",
+   "hex": "40 05 30 00 00 12 9F 5D 8E 61 49 50 53 52 50 54 DC B5 D8 42 A2 6C 2F 72 31 34 37 2E 30 30 30 4D 48 7A 20 2D 30 36 30",
    "decode": {
     "version": 1,
     "g": 0,
@@ -307,8 +307,8 @@
     "live": 1,
     "item": 0,
     "name": "IPSRPT",
-    "lat": -2573905,
-    "lon": 7119132,
+    "lat": -2574884,
+    "lon": 7119426,
     "sym": "/r",
     "comment": "147.000MHz -060"
    }
@@ -356,8 +356,8 @@
   {
    "id": "qry-001",
    "spec": "§6.7",
-   "about": "directed position query VK4AZ-9 -> VK4ABC",
-   "hex": "40 07 12 00 23 3A DD DD 8E 81 00 00 12 9F 5D 8E",
+   "about": "directed position query VK4XXX-9 -> VK4ABC",
+   "hex": "40 07 12 05 81 29 F1 B3 8E 81 00 00 12 9F 5D 8E",
    "decode": {
     "version": 1,
     "g": 0,
@@ -366,7 +366,7 @@
     "retry": 0,
     "subtype": 7,
     "seq": 18,
-    "src": "VK4AZ-9",
+    "src": "VK4XXX-9",
     "key": null,
     "qtype": 1,
     "target": "VK4ABC"
@@ -376,7 +376,7 @@
    "id": "qry-002",
    "spec": "§6.7",
    "about": "?IGATE?, one AES block",
-   "hex": "40 07 13 00 23 3A DD DD 8E 02",
+   "hex": "40 07 13 05 81 29 F1 B3 8E 02",
    "decode": {
     "version": 1,
     "g": 0,
@@ -385,7 +385,7 @@
     "retry": 0,
     "subtype": 7,
     "seq": 19,
-    "src": "VK4AZ-9",
+    "src": "VK4XXX-9",
     "key": null,
     "qtype": 2
    }
@@ -524,21 +524,21 @@
    "id": "bad-015",
    "spec": "§6.1",
    "about": "msgno 128 (reserved)",
-   "hex": "40 01 2C 00 00 12 9F 5D 8E 00 23 3A DD DD 8E 80 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20 31 33 30 30",
+   "hex": "40 01 2C 00 00 12 9F 5D 8E 05 81 29 F1 B3 8E 80 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20 31 33 30 30",
    "drop": "bad field"
   },
   {
    "id": "bad-016",
    "spec": "§6.1",
    "about": "'{' in message text",
-   "hex": "40 01 2C 00 00 12 9F 5D 8E 00 23 3A DD DD 8E 07 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20 31 33 30 30 7B",
+   "hex": "40 01 2C 00 00 12 9F 5D 8E 05 81 29 F1 B3 8E 07 4D 65 65 74 20 61 74 20 49 70 73 77 69 63 68 20 31 33 30 30 7B",
    "drop": "bad text"
   },
   {
    "id": "bad-017",
    "spec": "§6.4",
    "about": "68-character message",
-   "hex": "40 01 2C 00 00 12 9F 5D 8E 00 23 3A DD DD 8E 07 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78",
+   "hex": "40 01 2C 00 00 12 9F 5D 8E 05 81 29 F1 B3 8E 07 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78",
    "drop": "bad text"
   },
   {
@@ -552,14 +552,14 @@
    "id": "bad-019",
    "spec": "§8.2",
    "about": "object name length 0",
-   "hex": "40 05 30 00 00 12 9F 5D 8E 01 49 50 53 52 50 54 AF B9 D8 1C A1 6C 2F 72 31 34 37 2E 30 30 30 4D 48 7A 20 2D 30 36 30",
+   "hex": "40 05 30 00 00 12 9F 5D 8E 01 49 50 53 52 50 54 DC B5 D8 42 A2 6C 2F 72 31 34 37 2E 30 30 30 4D 48 7A 20 2D 30 36 30",
    "drop": "bad field"
   },
   {
    "id": "bad-020",
    "spec": "§8.2",
    "about": "object flags bit 3 (reserved)",
-   "hex": "40 05 30 00 00 12 9F 5D 8E 69 49 50 53 52 50 54 AF B9 D8 1C A1 6C 2F 72 31 34 37 2E 30 30 30 4D 48 7A 20 2D 30 36 30",
+   "hex": "40 05 30 00 00 12 9F 5D 8E 69 49 50 53 52 50 54 DC B5 D8 42 A2 6C 2F 72 31 34 37 2E 30 30 30 4D 48 7A 20 2D 30 36 30",
    "drop": "unknown flag"
   },
   {
