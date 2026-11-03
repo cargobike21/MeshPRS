@@ -272,7 +272,7 @@ LIPD 915-928 MHz has **no duty-cycle limit** [source, §5.1] and MBUG sets no nu
 
 **Per region, total MeshPRS:** keep it under **2 %** occupancy at any one site. At A = 3 this allows about 1 100 37-byte frames a day, the "smart, static every 30 min" row of §3.1. Every flooded frame costs ~13-25 s of network airtime, so floods are the budget's main consumer.
 
-These sit alongside the Kelly iGate's existing gate-side limits (1 per 5 s, burst 3, per-station 2 min, 30 s floor when moving; OPEN-QUESTIONS Q11), which govern what goes to APRS-IS, not what goes on air.
+These sit alongside the gateway's gate-side limits (spec §10.1: 1 line per 1 s, burst 10; one frame per station and service per 5 s; decision 0029), which guard what goes to APRS-IS against abuse and bugs, not what goes on air.
 
 ### 4.5 Frame design (for the spec owner)
 

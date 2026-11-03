@@ -8,4 +8,5 @@
 | Message text is at most 67 characters; the `{nn` suffix requests an ACK | APRS 1.01 ch. 14 *(to check)* |
 | Telemetry: `T#` with 5 analog channels and 8 bits, defined by PARM / UNIT / EQNS / BITS messages to itself | APRS 1.01 ch. 13; `igate.js` tlm* |
 | The APRS-IS passcode is a hash of the base callsign | `igate.js` passcode |
+| APRS-IS servers do not rate-limit senders (a tracker beaconing every 5 s is accepted). The aprs.fi *API* rate-limits clients pulling data, and the aprs.fi map marks positions under 5 s apart as "rate limited"; neither limits what a gateway sends | Alec, 2026-11-03; aprs.fi/page/api *(to check: page)*; decision 0029 |
 | VK frequencies: 145.175 MHz (VHF APRS), 433.775 MHz (LoRa APRS) | `loraaprs.js` header *(VHF: to check)* |

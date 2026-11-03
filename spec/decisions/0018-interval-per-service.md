@@ -1,6 +1,6 @@
 # 0018: The per-station interval is kept per station and service
 
-- **Status:** accepted
+- **Status:** accepted; the 2-min figure replaced by 0029 (the key stands)
 - **Date:** 2026-10-29
 - **Answers:** none (found while building Kelly's gate)
 - **Spec sections affected:** §10.1 step 6, §15.2

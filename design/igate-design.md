@@ -13,8 +13,8 @@ Kelly's receive-only APRS iGate is MeshPRS profile 0, the advert profile (spec �
 | Fact | Where |
 |---|---|
 | The gate decisions run **in the browser page**: `js/igate.js` `Gate` is pure, driven by `js/igateui.js` | `igate.js:140-197`, `igateui.js:118-141` |
-| The APRS-IS connection lives **in the Python bridge**, one persistent connection; the bridge re-checks every field and keeps its own token bucket "so a page bug can't flood APRS-IS" | `kelly_igate.py:1-19`, `:325-375` |
-| Pipeline: list (default deny) → valid position → duplicate (30 s) → per-station interval (2 min, 30 s floor if moved > 500 m) → bounded queue (20) with 0-8 s random delay → token bucket 1 per 5 s, burst 3; an item waiting > 30 s for a token is dropped as `rate` | `igate.js:11-16`, `:35`, `:150-188` |
+| The APRS-IS connection lives **in the Python bridge**, one persistent connection; the bridge re-checks every field and keeps its own token bucket as a guard against a page bug or an abusive sender (APRS-IS itself does not rate-limit senders, decision 0029) | `kelly_igate.py:1-19`, `:325-375` |
+| Pipeline: list (default deny) → valid position → duplicate (30 s) → per-station interval (5 s) → bounded queue (20) with 0-8 s random delay → token bucket 1 per 1 s, burst 10; an item waiting > 10 s for a token is dropped as `rate` (decision 0029) | `igate.js:11-16`, `:35`, `:150-188` |
 | Drop counters today: `notListed`, `rate`, `duplicate`, `invalid`, `unsent` (page); `rate`, `offline`, `invalid` (bridge) | `igate.js:112`, `kelly_igate.py:182` |
 | Line format `SRC>APZKPG,qAO,IGATE:!DDMM.mmN/DDDMM.mmE>comment`; comment cleaned to printable ASCII without `|` `~`, 43 chars | `igate.js:69-74`, `kelly_igate.py:99-105` |
 | Lat/lon rounding is half-up in both languages, with shared vectors | `kelly_igate.py:78`, `bridge/igate_vectors.json` |
@@ -88,9 +88,9 @@ Exactly spec §10.1, with the drop-reason names it defines:
 3. **Trust** (spec §4.3): `untrusted`, `no key`, `key mismatch`, and `unknown ack` for an ack that matches no record (spec §6.2).
 4. **Replay** (spec §9.3.1): `replayed`. **Validity** for subtypes with a position: `no fix`, `out of range`, `0,0`, `stale` (by receive time, never the frame's TS, spec §5.3), and `replayed (older advert)` for adverts.
 5. **Duplicate** (spec §10.2): key (originator, subtype, seq), retry field ignored, window **10 min** → `duplicate`. On the APRS side, a line identical to one sent in the last 30 s is not sent again.
-6. **Per-station interval** (Kelly defaults 2 min, 30 s floor when moved > 500 m; messages, acks and emergencies exempt) → `interval`.
+6. **Per-station interval** (5 s per station and service, decision 0029; messages, acks and emergencies exempt) → `interval`.
 7. **Queue and jitter** → `queue full`. Spec §10.1 step 9: random 0-5 s delay (Kelly today 0-8 s, `igate.js:35`), and a frame not sent within 15 s of receipt is dropped as `expired`; see §7.2 for why the hold must stay short.
-8. **Global rate limit** (Kelly: 1 per 5 s, burst 3) → `rate`. Kelly proposal: an item that waits more than **10 s** past its due time is dropped as `rate` (today 30 s, `igate.js:35`, `:184`), because a late copy falls outside the APRS-IS 30 s window (§7.2).
+8. **Global rate limit** (1 per 1 s, burst 10, decision 0029): a guard against abuse and runaway bugs, not an APRS-IS requirement. An item that waits more than **10 s** for a token is dropped as `rate`, so with the jitter it still meets the 15 s `expired` hold that keeps copies inside the APRS-IS 30 s duplicate window (§7.2).
 
 After step 8 the line goes to the bridge, which re-validates its shape and applies its own bucket (`kelly_igate.py:336-375`). The bridge needs a validator for each new shape (message, ack, object, weather, status, bulletin), as `telemetry_ok` is for telemetry (`kelly_igate.py:116-122`). Its refusals and "APRS-IS not up" are Kelly-local counters (§10), not spec reasons.
 
@@ -117,7 +117,7 @@ Illustrative lines (values from the spec's own examples where it has them):
 | **0x06 Bulletin** | `VK4ABC>APZKPG,qAO,VK4AZ-10::BLN1     :Net tonight 1930 on 147.000` | Spec §6.6. Gated once per frame (duplicate step); the iGate does not repeat bulletins itself |
 | **0x07 Query** | not gated (`not gated`) | APRS never gates `?` queries to IS (findings §4.2). The iGate MAY answer one addressed to itself on the mesh (spec §6.7) |
 | **0x08 Neighbour report** | not gated (`not gated`) | Spec §8.3, §10.1 |
-| **0x09 Emergency / Status** | `VK4AZ-9>APZKPG,qAO,VK4AZ-10:>Net control tonight`; with a position: `...:!2728.08S/15301.41E>EMERGENCY Vehicle rollover` | Spec §8.4. Codes 7 and 9 are exempt from the per-station interval, queued ahead of everything else and never dropped for `queue full` while a lower-priority frame is held, but still subject to the global rate limit. Whether APRS software flags a non-Mic-E emergency is UNVERIFIED (spec proposed Q20) |
+| **0x09 Emergency / Status** | `VK4AZ-9>APZKPG,qAO,VK4AZ-10:>Net control tonight`; with a position: `...:!2728.08S/15301.41E>EMERGENCY Vehicle rollover` | Spec §8.4. Codes 7 and 9 are exempt from the per-station interval, queued ahead of everything else and never dropped for `queue full` while a lower-priority frame is held, but still subject to the global rate limit (the abuse guard). Whether APRS software flags a non-Mic-E emergency is UNVERIFIED (spec proposed Q20) |
 
 ### 4.1 Telemetry definitions
 

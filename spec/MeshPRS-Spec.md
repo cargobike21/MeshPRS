@@ -206,7 +206,7 @@ A station sending position frames SHOULD beacon when any one of these holds sinc
 
 Rules on top of the triggers:
 - **Minimum interval:** a station MUST NOT beacon more often than its minimum interval. The default is 120 s, and it MUST NOT be set below 30 s. A trigger inside the minimum interval waits until the interval expires.
-- **Mobiles in patchy coverage:** a moving station MAY use a 60 s minimum where coverage is patchy. Gateways pass at most one position per station every 2 min (§10.1 step 6), so the extra frames add no APRS-IS lines. They replace lost frames before the gateway's interval runs out, which keeps the track continuous. On the 2026-10-31 bike ride, with 69 % of frames delivered, a 60 s minimum gave 26 positions on APRS-IS where 120 s would have given 19-21 (decision 0027). It doubles the station's flood airtime, so it suits a few mobiles, not a whole region.
+- **Mobiles in patchy coverage:** a moving station MAY use a 60 s minimum where coverage is patchy. The extra frames shorten the gaps that lost frames leave in the track: on the 2026-10-31 bike ride 69 % of frames were delivered and losses clustered (decision 0027). The cost is LoRa airtime: a 60 s minimum doubles the station's flood airtime (decision 0011), so it suits a few mobiles, not a whole region.
 - **Configurable:** all four values SHOULD be configurable.
 - **Fixed stations:** a station that does not move SHOULD rely on its advert position (§5.4) and SHOULD NOT send position frames, apart from one in reply to a query (§6.7) or when it changes symbol or comment. Adverts already flood and are already gated in profile 0, so a beacon frame only adds airtime (SA-8, `../design/reliability.md`).
 
@@ -608,7 +608,7 @@ Direction 1 (they heard me): `DISCOVER_RESP`, which carries the SNR at which eac
 - **Gateway priority:**
   - A gateway MUST exempt code 7 and 9 frames from the per-station interval.
   - It MUST queue them ahead of all other traffic, and MUST NOT drop one for `queue full` while it holds any lower-priority frame (it drops that frame instead).
-  - It MUST still apply the global rate limit, so that a flood of fake emergencies cannot flood APRS-IS.
+  - It MUST still apply the global rate limit (§10.1 step 8), the gateway's guard against abuse and runaway senders, so that a burst of fake emergencies cannot bypass it.
 - **Local alert:** on a code 7 or code 9 frame, a gateway SHOULD also alert its own operator locally, and MAY show it on its own map or log (decision 0024).
 - **Mesh priority:** stations relaying nothing do nothing different. MeshCore has no priority field for group packets, so mesh-side priority would need firmware changes (Annex C).
 
@@ -804,15 +804,15 @@ Every gateway MUST process each mesh-side frame in **this order**. The order is 
 3. **Trust** (§4.3): `untrusted`, `no key`, `key mismatch`, `unknown ack`.
 4. **Replay** (§9.3.1): `replayed`. **Validity**, for subtypes with a position: `no fix`, `out of range`, `0,0`, `stale`, and `replayed (older advert)` for adverts.
 5. **Duplicate suppression** (§10.2): `duplicate`.
-6. **Per-station interval**, kept per station and service: the key is (source, subtype), plus the telemetry kind for telemetry and the object name for objects (decision 0018). Kelly: 2 min, down to a 30 s floor when the station has moved more than 500 m. Messages, acks and emergencies are exempt: `interval`.
+6. **Per-station interval**, kept per station and service: the key is (source, subtype), plus the telemetry kind for telemetry and the object name for objects (decision 0018). A gateway MUST NOT gate more than one frame per key per **5 s**. Messages, acks and emergencies (codes 7 and 9) are exempt: `interval`.
 7. **Queue and jitter** (a bounded queue with a random delay of 0-5 s, so gateways hearing one frame don't all send at once): `queue full`.
-8. **Global rate limit** (Kelly: token bucket, 1 per 5 s, burst 3). A frame that would exceed it waits in the queue, but at most 10 s: `rate`.
+8. **Global rate limit:** a token bucket of **1 line per 1 s, burst 10**. A frame that would exceed it waits in the queue, but at most 10 s: `rate`.
 9. **Maximum hold:** a frame not sent within **15 s** of its receipt MUST be dropped (`expired`).
    - The figure is jitter (5 s) plus the longest wait (10 s).
    - It keeps every gateway's line for one frame inside APRS-IS's 30 s duplicate window (F§4.6), so copies still merge.
    - Emergencies (§8.4) are held to the same limit.
 
-The numbers are the network-wide figures of decision 0011.
+The numbers are decision 0029's. APRS-IS does not rate-limit senders, so steps 6 and 8 are not there for APRS-IS: they are a baseline that stops a broken or hostile station, or a gateway bug, from turning into an unbounded stream of lines. Step 9 does rest on APRS-IS, through its duplicate window. What a station puts on air is bounded separately, by the airtime budget (decision 0011, §5.5).
 
 ### 10.2 Duplicates
 
@@ -1024,9 +1024,9 @@ These are the only drop-reason names. Implementations and vectors MUST use these
 | `0,0` | §5.3 | Profile 0 validity check |
 | `stale` | §5.3 | Profile 0 validity check |
 | `duplicate` | §10.2, §6.5 | Same (identity, seq) within 10 min, or an extra APRS retry |
-| `interval` | §10.1 | Per-station interval (per station and service) |
+| `interval` | §10.1 | Within 5 s of the last frame gated for the same station and service |
 | `queue full` | §10.1 | Queue bound reached |
-| `rate` | §10.1 | Global rate limit |
+| `rate` | §10.1 | Waited over 10 s for the global limit (1 line per 1 s, burst 10) |
 | `expired` | §10.1 | Not sent within 15 s of receipt |
 | `addressee not heard` | §6.5 | APRS → mesh: addressee has sent no MeshPRS frame heard here in the last hour |
 | `sender on mesh` | §6.5 | APRS → mesh: the APRS sender was heard on the mesh in the last hour |
@@ -1083,7 +1083,7 @@ Every question in [OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md) is answered. The rec
 | 0005 | Trust lists: owner's list plus club-signed list, per gateway |
 | 0006 | Profile-0 polled-telemetry exception |
 | 0007 | Scope of 1.0 (required and optional subtypes) |
-| 0011 | Airtime budget and rate limits |
+| 0011 | Airtime budget |
 | 0012 | Trial identifiers: `#meshprs`, data type 0xFF4D, tocall `APZKPG` |
 | 0013 | Field-trial pass criteria |
 | 0014 | Name |
@@ -1096,6 +1096,9 @@ Every question in [OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md) is answered. The rec
 | 0024 | Emergency local alert, 120 s minimum beacon interval, bulletin schedule |
 | 0025 | Gateway roles and directions; deferrals |
 | 0026 | No signed frames in 1.0 |
+| 0027 | First ride: 120 s default with 60 s for mobiles, one status retry, gateway log, first-hop ranges |
+| 0028 | An unchanged status and telemetry definitions are repeated rarely; only a new status is retried |
+| 0029 | Gate-side limits: 5 s per station and service, 1 line per 1 s with a burst of 10, against abuse and bugs |
 
 Records 0008-0010, 0015, 0016 and 0019 are about the reference implementation (Kelly Page), not the standard.
 

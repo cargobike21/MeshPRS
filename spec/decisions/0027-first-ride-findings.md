@@ -1,6 +1,6 @@
 # 0027: First ride: 120 s default with 60 s for mobiles, one status retry, T7 rate, gateway log, first-hop ranges
 
-- **Status:** accepted
+- **Status:** accepted; the Q34 T7 rate replaced by 0029
 - **Date:** 2026-10-31
 - **Answers:** OPEN-QUESTIONS Q32, Q33, Q34, Q35, Q36
 - **Spec sections affected:** §5.5, §8.4, §9.3 (retry field, seq), §10.4 (new), §10.5; `design/test-plan.md` §5.1, §6.2; `design/reliability.md` §2.8 (new), §4.1

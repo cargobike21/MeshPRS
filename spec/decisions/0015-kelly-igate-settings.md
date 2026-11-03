@@ -1,6 +1,6 @@
 # 0015: Kelly iGate settings for MeshPRS frames
 
-- **Status:** accepted; the Q-A6 part replaced by 0019
+- **Status:** accepted; the Q-A6 part replaced by 0019; the interval and rate figures replaced by 0029
 - **Date:** 2026-10-29
 - **Answers:** igate-design Q-A5, Q-A6, Q-A7, Q-A9, Q-A10
 - **Spec sections affected:** none (implementation; Q-A7 follows decision 0005)

@@ -382,7 +382,7 @@ footer{margin-top:50px;border-top:1px solid var(--line);padding-top:12px;font:.8
 <p>Rules on top of the triggers:</p>
 <ul>
 <li><strong>Minimum interval:</strong> a station <span class="kw">MUST NOT</span> beacon more often than its minimum interval. The default is 120 s, and it <span class="kw">MUST NOT</span> be set below 30 s. A trigger inside the minimum interval waits until the interval expires.</li>
-<li><strong>Mobiles in patchy coverage:</strong> a moving station <span class="kw">MAY</span> use a 60 s minimum where coverage is patchy. Gateways pass at most one position per station every 2 min (§10.1 step 6), so the extra frames add no APRS-IS lines. They replace lost frames before the gateway's interval runs out, which keeps the track continuous. On the 2026-10-31 bike ride, with 69 % of frames delivered, a 60 s minimum gave 26 positions on APRS-IS where 120 s would have given 19-21 (decision <a href="spec/decisions/0027-first-ride-findings.md">0027</a>). It doubles the station's flood airtime, so it suits a few mobiles, not a whole region.</li>
+<li><strong>Mobiles in patchy coverage:</strong> a moving station <span class="kw">MAY</span> use a 60 s minimum where coverage is patchy. The extra frames shorten the gaps that lost frames leave in the track: on the 2026-10-31 bike ride 69 % of frames were delivered and losses clustered (decision <a href="spec/decisions/0027-first-ride-findings.md">0027</a>). The cost is LoRa airtime: a 60 s minimum doubles the station's flood airtime (decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>), so it suits a few mobiles, not a whole region.</li>
 <li><strong>Configurable:</strong> all four values <span class="kw">SHOULD</span> be configurable.</li>
 <li><strong>Fixed stations:</strong> a station that does not move <span class="kw">SHOULD</span> rely on its advert position (§5.4) and <span class="kw">SHOULD NOT</span> send position frames, apart from one in reply to a query (§6.7) or when it changes symbol or comment. Adverts already flood and are already gated in profile 0, so a beacon frame only adds airtime (SA-8, <code>../design/reliability.md</code>).</li>
 </ul>
@@ -1247,7 +1247,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <li><strong>Gateway priority:</strong><ul>
 <li>A gateway <span class="kw">MUST</span> exempt code 7 and 9 frames from the per-station interval.</li>
 <li>It <span class="kw">MUST</span> queue them ahead of all other traffic, and <span class="kw">MUST NOT</span> drop one for <code>queue full</code> while it holds any lower-priority frame (it drops that frame instead).</li>
-<li>It <span class="kw">MUST</span> still apply the global rate limit, so that a flood of fake emergencies cannot flood APRS-IS.</li>
+<li>It <span class="kw">MUST</span> still apply the global rate limit (§10.1 step 8), the gateway's guard against abuse and runaway senders, so that a burst of fake emergencies cannot bypass it.</li>
 </ul>
 </li>
 <li><strong>Local alert:</strong> on a code 7 or code 9 frame, a gateway <span class="kw">SHOULD</span> also alert its own operator locally, and <span class="kw">MAY</span> show it on its own map or log (decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>).</li>
@@ -1616,9 +1616,9 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <li><strong>Trust</strong> (§4.3): <code>untrusted</code>, <code>no key</code>, <code>key mismatch</code>, <code>unknown ack</code>.</li>
 <li><strong>Replay</strong> (§9.3.1): <code>replayed</code>. <strong>Validity</strong>, for subtypes with a position: <code>no fix</code>, <code>out of range</code>, <code>0,0</code>, <code>stale</code>, and <code>replayed (older advert)</code> for adverts.</li>
 <li><strong>Duplicate suppression</strong> (§10.2): <code>duplicate</code>.</li>
-<li><strong>Per-station interval</strong>, kept per station and service: the key is (source, subtype), plus the telemetry kind for telemetry and the object name for objects (decision <a href="spec/decisions/0018-interval-per-service.md">0018</a>). Kelly: 2 min, down to a 30 s floor when the station has moved more than 500 m. Messages, acks and emergencies are exempt: <code>interval</code>.</li>
+<li><strong>Per-station interval</strong>, kept per station and service: the key is (source, subtype), plus the telemetry kind for telemetry and the object name for objects (decision <a href="spec/decisions/0018-interval-per-service.md">0018</a>). A gateway <span class="kw">MUST NOT</span> gate more than one frame per key per <strong>5 s</strong>. Messages, acks and emergencies (codes 7 and 9) are exempt: <code>interval</code>.</li>
 <li><strong>Queue and jitter</strong> (a bounded queue with a random delay of 0-5 s, so gateways hearing one frame don't all send at once): <code>queue full</code>.</li>
-<li><strong>Global rate limit</strong> (Kelly: token bucket, 1 per 5 s, burst 3). A frame that would exceed it waits in the queue, but at most 10 s: <code>rate</code>.</li>
+<li><strong>Global rate limit:</strong> a token bucket of <strong>1 line per 1 s, burst 10</strong>. A frame that would exceed it waits in the queue, but at most 10 s: <code>rate</code>.</li>
 <li><strong>Maximum hold:</strong> a frame not sent within <strong>15 s</strong> of its receipt <span class="kw">MUST</span> be dropped (<code>expired</code>).<ul>
 <li>The figure is jitter (5 s) plus the longest wait (10 s).</li>
 <li>It keeps every gateway's line for one frame inside APRS-IS's 30 s duplicate window (F§4.6), so copies still merge.</li>
@@ -1626,7 +1626,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 </ul>
 </li>
 </ol>
-<p>The numbers are the network-wide figures of decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>.</p>
+<p>The numbers are decision <a href="spec/decisions/0029-gate-abuse-baseline.md">0029</a>'s. APRS-IS does not rate-limit senders, so steps 6 and 8 are not there for APRS-IS: they are a baseline that stops a broken or hostile station, or a gateway bug, from turning into an unbounded stream of lines. Step 9 does rest on APRS-IS, through its duplicate window. What a station puts on air is bounded separately, by the airtime budget (decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>, §5.5).</p>
 <h3 id="102-duplicates">10.2 Duplicates</h3>
 <ul>
 <li><strong>Mesh side:</strong> the duplicate key is (originator identity, seq) (§9.3), <strong>ignoring the retry field</strong>. Subtype is not part of the key, because one counter covers every subtype. A gateway <span class="kw">MUST</span> treat a frame matching a key it accepted in the last 10 min as a duplicate (<code>duplicate</code>), so all retries of one frame give at most one APRS-IS line. The check belongs where the APRS-IS line is sent, so a restarted or second front end on the same connection can't send a frame twice (decision <a href="spec/decisions/0028-rare-status-and-definitions.md">0028</a>). The 127-frames-per-10-minutes limit (§9.3.1) keeps the key unambiguous.</li>
@@ -2053,7 +2053,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <tr>
 <td><code>interval</code></td>
 <td>§10.1</td>
-<td>Per-station interval (per station and service)</td>
+<td>Within 5 s of the last frame gated for the same station and service</td>
 </tr>
 <tr>
 <td><code>queue full</code></td>
@@ -2063,7 +2063,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <tr>
 <td><code>rate</code></td>
 <td>§10.1</td>
-<td>Global rate limit</td>
+<td>Waited over 10 s for the global limit (1 line per 1 s, burst 10)</td>
 </tr>
 <tr>
 <td><code>expired</code></td>
@@ -2335,7 +2335,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 </tr>
 <tr>
 <td><a href="spec/decisions/0011-airtime-budget.md">0011</a></td>
-<td>Airtime budget and rate limits</td>
+<td>Airtime budget</td>
 </tr>
 <tr>
 <td><a href="spec/decisions/0012-trial-identifiers.md">0012</a></td>
@@ -2384,6 +2384,18 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <tr>
 <td><a href="spec/decisions/0026-signatures-later.md">0026</a></td>
 <td>No signed frames in 1.0</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0027-first-ride-findings.md">0027</a></td>
+<td>First ride: 120 s default with 60 s for mobiles, one status retry, gateway log, first-hop ranges</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0028-rare-status-and-definitions.md">0028</a></td>
+<td>An unchanged status and telemetry definitions are repeated rarely; only a new status is retried</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0029-gate-abuse-baseline.md">0029</a></td>
+<td>Gate-side limits: 5 s per station and service, 1 line per 1 s with a burst of 10, against abuse and bugs</td>
 </tr>
 </tbody>
 </table></div>

@@ -23,7 +23,7 @@ Numbered so decision records and the spec can refer to them. When one is answere
 
 ## Behaviour
 
-- **Q11. Rate limits.** **→ Decided in 0011.** Keep the Kelly iGate defaults (1 per 5 s, burst 3, per-station 2 min, 30 s floor when moving), or set network-wide figures with MBUG? Floods on the mesh side: when, if ever?
+- **Q11. Rate limits.** **→ Decided in 0011** (the airtime budget) **and 0029** (the gate-side limits, Q38). Network-wide figures with MBUG, or gateway defaults only? Floods on the mesh side: when, if ever?
 - **Q12. Trial success.** **→ Decided in 0013.** What does the field trial have to show: delivery rate, duplicates, no loops, airtime cost?
 - **Q13. Review.** **→ Decided in 0020** (MBUG, APRS-IS operators and MeshCore developers; tocall in 0012). Who reviews before 1.0 (MBUG, APRS-IS operators, MeshCore developers)? Do we ask for a registered tocall instead of `APZKPG`?
 - **Q14. Message length and ACKs.** **→ Decided in 0022** (refuse over 67, never truncate or split; end-to-end acks). APRS messages are 67 characters with `{nn` ACKs; MeshCore DMs are longer, with their own ACKs. Do we truncate, split or refuse? Whose ACK counts?
@@ -61,3 +61,7 @@ Section references (§) are to `spec/MeshPRS-Spec.md`.
 ## Raised by the parked tracker (2026-10-31)
 
 - **Q37. How often to repeat an unchanged status and the telemetry definitions.** **→ Decided in 0028** (at start, on change and on query; otherwise no more often than every 6 h, 12 h for a battery station; the status retry only for a new status). A parked Mesh Buddy 1.0 spent about half its airtime repeating them.
+
+## Raised by the APRS-IS rate check (2026-11-03)
+
+- **Q38. Gate-side limits.** **→ Decided in 0029** (5 s per station and service; 1 line/s, burst 10; an abuse and bug guard). APRS-IS does not rate-limit senders, so the gateway's 2-min interval and 1 per 5 s bucket protect nothing there, and the interval held 19 of 47 ride frames. What baseline should a gateway keep?

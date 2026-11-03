@@ -186,7 +186,7 @@ At each iGate and trial repeater, log the channel for ≥ 2 h before the trial, 
 Only after T5 and T6 pass.
 - **Identity:** a dedicated SSID for the test source, not one in daily use. The iGate's own call-SSID, tocall `APZKPG` (experimental range, unallocated [source §4.4]), `qAO`.
 - **Content:** the position is the station's real location. A status or comment says it is a MeshPRS test.
-- **Rate and length:** at most the gateway's per-station interval (one position per source per 2 min, spec §10.1 step 6), for ≤ 2 h, with a stated start and end. A mobile track can't be judged at 5 min spacing (decision 0027). Alec is watching aprs.fi live with a stop switch: the iGate's gate-to-IS can be turned off without stopping the mesh side.
+- **Rate and length:** no faster than the station's smart-beaconing minimum (spec §5.5: 120 s, or 60 s for a mobile in patchy coverage; decision 0029), for ≤ 2 h, with a stated start and end. A mobile track can't be judged at 5 min spacing (decision 0027). Alec is watching aprs.fi live with a stop switch: the iGate's gate-to-IS can be turned off without stopping the mesh side.
 - **Pass:** each frame appears once on aprs.fi with the right source, symbol and position; no duplicates; nothing from the test flag leaks; the raw packets match the private-server run byte for byte, apart from the q-construct.
 
 ## 7. Pass criteria for the field trial (decision 0013)
