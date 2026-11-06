@@ -65,3 +65,18 @@ Section references (§) are to `spec/MeshPRS-Spec.md`.
 ## Raised by the APRS-IS rate check (2026-11-03)
 
 - **Q38. Gate-side limits.** **→ Decided in 0029** (5 s per station and service; 1 line/s, burst 10; an abuse and bug guard). APRS-IS does not rate-limit senders, so the gateway's 2-min interval and 1 per 5 s bucket protect nothing there, and the interval held 19 of 47 ride frames. What baseline should a gateway keep?
+
+## Raised by the 2026-11-04 rides
+
+- **Q39. Recovering positions that got no echo.** **→ Decided in 0030** (both: one retry 40-50 s after a missed echo, then a track history frame, subtype 0x0A, gated as timestamped positions). A third to a half of a mobile's positions were lost, in clusters, and Mesh Buddy can tell which (no repeater echo within 20 s). Should it retry them, send them later as a history, or both?
+
+## Raised 2026-11-05
+
+- **Q40. Showing how many hops a frame took to the gateway.** **→ Decided in 0031** (an H flag: the gateway fills in its own hop count, in a telemetry slot and at the end of a status text). Only the gateway sees the path, so the station can't send it itself.
+
+## Raised by the 2026-11-06 rides
+
+- **Q41. Track history entries behind the live track.** **→ Decided in 0032** (an entry older than the newest live position gated, or already gated live, stays in the gateway's log). They always arrive after a newer live position and drew spikes back along the track; some had already gone out by their retry.
+- **Q42. The per-node airtime budget for a moving station.** **→ Decided in 0033** (a 24 h average: 144 floods and 240 s a day; a moving station beacons at its §5.5 rate inside it). Decision 0011 allows 1 flood per 10 min on average (burst 3) and 10 s/h, but §5.5 lets a moving station beacon every 120 s (60 s in patchy coverage), up to 30 floods an hour. Over what period does the budget average, and does a mobile get its own allowance? Measured: about 35 frames and 14 s in a riding hour, about 1 frame per 11 min over the day (`design/field-trial-log.md` §3).
+- **Q43. Move threshold and parked rate for a tracker parked indoors.** **→ Decided in 0034** (the §5.5 default becomes 500 m). GPS drift indoors moved a parked tracker past a 50 m threshold about 20 times in a day; 500 m and an hourly parked position stopped it. Should §5.5's 100 m default rise, or should a station suppress the distance trigger while its speed stays under 5 km/h?
+

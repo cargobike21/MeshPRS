@@ -1,6 +1,6 @@
 # 0011: MeshPRS airtime budget: 10 s/h of transmit time and one flood per 10 min per node
 
-- **Status:** accepted
+- **Status:** accepted; the averaging period set by 0033 (24 h)
 - **Date:** 2026-10-29
 - **Answers:** OPEN-QUESTIONS Q11
 - **Spec sections affected:** §5.5, §10.1, §12.3

@@ -260,9 +260,10 @@ These are proposals; each needs Alec's decision, and some need MBUG's.
 LIPD 915-928 MHz has **no duty-cycle limit** [source, §5.1] and MBUG sets no number [source, §5.4], so MeshPRS must set its own. The figure to protect is the channel at a busy site (A copies audible). Measured background at VK4AZ is about 1 %.
 
 **Per originating node:**
-- **Flooded MeshPRS frames:** ≤ **1 per 10 min** on average, burst ≤ 3.
+- **Averaged over 24 h** (decision 0033): a moving station may beacon at its spec §5.5 rate as long as the day stays inside these.
+- **Flooded MeshPRS frames:** ≤ **1 per 10 min** on average (144 a day), burst ≤ 3.
 - **Direct frames to an iGate:** ≤ **1 per 60 s** while moving (SmartBeaconing fast rate), ≤ 1 per 30 min while parked.
-- **Own transmit time:** ≤ **10 s/h**, about 25 position frames.
+- **Own transmit time:** ≤ **10 s/h** on average (240 s a day), about 25 position frames an hour.
 - **Retries:** at most 2 per message, at 30 s and 60 s after the first send (so at most 3 sends). Both gaps exceed the longest round trip seen (§2.1's 18.7 s ACK).
 
 **Per iGate, APRS-IS → mesh:**

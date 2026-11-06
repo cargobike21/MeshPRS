@@ -24,7 +24,7 @@ Comments, questions and implementation reports are welcome as [issues](https://g
 | [spec/decisions/](spec/decisions/) | One record per decision: the context, the options and the choice made |
 | [test-vectors/](test-vectors/) | Shared JSON vectors (input, then expected output or drop reason). Every implementation must pass them |
 | [research/](research/) | The facts the spec relies on, with sources. [00-findings.md](research/00-findings.md) is the baseline (MeshCore 1.18.0 source, APRS 1.2, aprs-is.net, LIPD 2025) |
-| [design/](design/) | Informative design notes: airtime and multi-hop delivery ([reliability.md](design/reliability.md)), the field trial ([test-plan.md](design/test-plan.md)), the reference iGate ([igate-design.md](design/igate-design.md)) |
+| [design/](design/) | Informative design notes: airtime and multi-hop delivery ([reliability.md](design/reliability.md)), the field trial ([test-plan.md](design/test-plan.md)) and what it has measured so far ([field-trial-log.md](design/field-trial-log.md)), the reference iGate ([igate-design.md](design/igate-design.md)) |
 | [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) | Every question raised so far, each with the decision that answered it |
 | [PLAN.md](PLAN.md) | Phases and milestones |
 

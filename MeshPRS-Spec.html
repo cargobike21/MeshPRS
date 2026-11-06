@@ -342,7 +342,7 @@ footer{margin-top:50px;border-top:1px solid var(--line);padding-top:12px;font:.8
 <ul>
 <li>The output is <code>SRC&gt;TOCALL,qAO,IGATE:</code> followed by <code>!</code> (or <code>=</code> when MSG is set), then the uncompressed position, the CSE extension, the altitude and the comment.</li>
 <li>Every part is rendered by the normative rules in §10.3, so every gateway emits the same line.</li>
-<li><strong>TS:</strong> a gateway <span class="kw">MUST NOT</span> use it to judge freshness or to build an APRS timestamp, because MeshCore clocks are often wrong (decision <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>; F§3.1). Freshness is the receive time, and replay is judged by seq (§9.3.1).</li>
+<li><strong>TS:</strong> a gateway <span class="kw">MUST NOT</span> use it to judge freshness or to build an APRS timestamp, because MeshCore clocks are often wrong (decision <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>; F§3.1). Freshness is the receive time, and replay is judged by seq (§9.3.1). The track history's timestamps also come from the receive time (§5.8).</li>
 <li><strong>Validity checks:</strong> the same as Kelly's <code>checkPosition</code>: no fix, out of range, <code>0,0</code>, stale.</li>
 </ul>
 <h3 id="54-adverts-profile-0-and-frames-together">5.4 Adverts (profile 0) and frames together</h3>
@@ -364,8 +364,8 @@ footer{margin-top:50px;border-top:1px solid var(--line);padding-top:12px;font:.8
 <tbody>
 <tr>
 <td>Moved more than</td>
-<td>100 m</td>
-<td>Great-circle distance from the last <strong>sent</strong> position</td>
+<td>500 m</td>
+<td>Great-circle distance from the last <strong>sent</strong> position. 500 m keeps GPS drift from beaconing a parked station (decision <a href="spec/decisions/0034-move-threshold-500m.md">0034</a>); a slow mover <span class="kw">MAY</span> set it lower</td>
 </tr>
 <tr>
 <td>Heading changed by more than</td>
@@ -383,6 +383,7 @@ footer{margin-top:50px;border-top:1px solid var(--line);padding-top:12px;font:.8
 <ul>
 <li><strong>Minimum interval:</strong> a station <span class="kw">MUST NOT</span> beacon more often than its minimum interval. The default is 120 s, and it <span class="kw">MUST NOT</span> be set below 30 s. A trigger inside the minimum interval waits until the interval expires.</li>
 <li><strong>Mobiles in patchy coverage:</strong> a moving station <span class="kw">MAY</span> use a 60 s minimum where coverage is patchy. The extra frames shorten the gaps that lost frames leave in the track: on the 2026-10-31 bike ride 69 % of frames were delivered and losses clustered (decision <a href="spec/decisions/0027-first-ride-findings.md">0027</a>). The cost is LoRa airtime: a 60 s minimum doubles the station's flood airtime (decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>), so it suits a few mobiles, not a whole region.</li>
+<li><strong>Budget:</strong> the per-node budget is a 24 h average: at most 144 flooded frames and 240 s of own transmit time a day, retries and track history included (decisions <a href="spec/decisions/0011-airtime-budget.md">0011</a>, <a href="spec/decisions/0033-daily-airtime-budget.md">0033</a>). Inside the day a moving station is bounded by its minimum interval, so a station that moves for hours <span class="kw">SHOULD</span> use the 120 s default and keep 60 s for short spells.</li>
 <li><strong>Configurable:</strong> all four values <span class="kw">SHOULD</span> be configurable.</li>
 <li><strong>Fixed stations:</strong> a station that does not move <span class="kw">SHOULD</span> rely on its advert position (§5.4) and <span class="kw">SHOULD NOT</span> send position frames, apart from one in reply to a query (§6.7) or when it changes symbol or comment. Adverts already flood and are already gated in profile 0, so a beacon frame only adds airtime (SA-8, <code>../design/reliability.md</code>).</li>
 </ul>
@@ -416,6 +417,128 @@ footer{margin-top:50px;border-top:1px solid var(--line);padding-top:12px;font:.8
 <p>A flood costs that once per repeater that relays it. The network-wide budget is decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>, the defaults above are decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>, and the mobile 60 s option is decision <a href="spec/decisions/0027-first-ride-findings.md">0027</a>; <code>../design/reliability.md</code> has the full table.</p>
 <h3 id="56-aprs-mesh">5.6 APRS → mesh</h3>
 <p>APRS-IS positions <span class="kw">MUST NOT</span> be put onto the mesh in 1.0 (§3.2). That includes a message sender's next position: the IS → RF practice of passing it on (F§4.6) is left for a later version (decision <a href="spec/decisions/0025-scope-roles-and-deferrals.md">0025</a>).</p>
+<h3 id="57-position-retry">5.7 Position retry</h3>
+<p>A flooded frame that a repeater relays comes back to its sender: the repeater's copy has the same MeshCore packet hash, which covers the payload only (F§2.4). Hearing that copy within a short window is an <strong>echo</strong>: proof that the first hop worked. Losses are mostly at the first hop and they cluster (decision <a href="spec/decisions/0027-first-ride-findings.md">0027</a>), so a position that drew no echo was probably lost.</p>
+<p>A station that floods its positions and can hear echoes <span class="kw">SHOULD</span> retry a position that drew none:</p>
+<ul>
+<li><strong>Echo window:</strong> 20 s from sending the position. A window cut short because the station sent another frame does not count as "no echo".</li>
+<li><strong>The retry:</strong> the same frame, every byte identical and the same seq, with the retry field 1 (§9.3), sent after a further random delay of <strong>20-30 s</strong>, so 40-50 s after the original.</li>
+<li>It <span class="kw">MUST NOT</span> retry a position more than once, and <span class="kw">MUST NOT</span> retry one it sent zero-hop (no echo can come back).</li>
+<li>It <span class="kw">MUST</span> skip the retry when it has sent a newer position since, or when its next position is due within 10 s: the newer one replaces it.</li>
+<li>It <span class="kw">SHOULD NOT</span> send the retry within 5 s of its own previous frame; it waits instead, under the rule above.</li>
+<li>A retry is not a new beacon: it does not restart the smart-beaconing triggers or the minimum interval (§5.5).</li>
+</ul>
+<p>Gateways collapse a position and its retry into one APRS-IS line (§10.2).</p>
+<p><strong>Why 40-50 s.</strong></p>
+<ul>
+<li><strong>Later is better against clustered loss.</strong> On the 2026-10-31 ride a frame sent 60 s after a lost one was lost 48 % of the time, against 31 % overall (decision <a href="spec/decisions/0027-first-ride-findings.md">0027</a>). An immediate retry would land in the same hole.</li>
+<li><strong>Sooner than the next beacon.</strong> A moving station beacons every 60-120 s (§5.5). A retry later than that is overtaken by the next position, which the skip rule then prefers.</li>
+<li><strong>Random spread.</strong> The 20-30 s spread stops two stations that lost frames to the same collision from retrying into each other.</li>
+<li><strong>Airtime.</strong> A retry that no repeater hears costs only the station's own transmission. Most losses are at the first hop (decision <a href="spec/decisions/0027-first-ride-findings.md">0027</a>), so most retries sent from inside a hole are never flooded.</li>
+</ul>
+<h3 id="58-track-history-subtype-0x0a">5.8 Track history (subtype 0x0A)</h3>
+<p>Positions that drew no echo, even on retry, leave gaps in the station's track. A station <span class="kw">MAY</span> keep them and send them later, once it is back in coverage, in one <strong>track history</strong> frame. Gateways gate each entry as a timestamped APRS position.</p>
+<p><strong>Station rules</strong></p>
+<ul>
+<li><strong>What it keeps:</strong> a position (subtype 0x00) for which neither the frame nor its retry, if one was sent, drew an echo (§5.7). It keeps at most <strong>8</strong>, dropping the oldest. At sending time, every entry <span class="kw">MUST</span> be at most <strong>1800 s</strong> old; older ones are discarded.</li>
+<li><strong>When it sends:</strong> after a later frame of any subtype draws an echo, it <span class="kw">SHOULD</span> send one track history frame holding the positions it kept, then forget them. It sends it flooded, under the station's 5 s gap between frames.</li>
+<li><strong>seq:</strong> a track history is a new frame with its own seq (§9.3). It is not a retry of the positions it carries, and it is not itself retried.</li>
+<li><strong>No clock needed:</strong> an entry's age is measured on the station's own uptime clock, the time between taking the position and sending the history frame. The station needs no wall-clock time, and MeshCore node clocks are not trusted (decision <a href="spec/decisions/0023-clocks-and-compact-text.md">0023</a>).</li>
+</ul>
+<p><strong>Layout</strong> (after the common header, §9.3):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>symbol</td>
+<td>2 × ASCII</td>
+<td>2</td>
+<td>As §5.1, for every entry</td>
+</tr>
+<tr>
+<td>hflags</td>
+<td>u8</td>
+<td>1</td>
+<td>bit 0 ALT (each entry carries an altitude); bits 1-3 ambiguity 0-4 (5-7 reserved); bit 4 MSG; bits 5-7 reserved</td>
+</tr>
+<tr>
+<td>count</td>
+<td>u8</td>
+<td>1</td>
+<td>1-8</td>
+</tr>
+<tr>
+<td>entries</td>
+<td></td>
+<td>count × 8, or × 10 with ALT</td>
+<td>Oldest first; ages strictly falling</td>
+</tr>
+<tr>
+<td>↳ age</td>
+<td>u16 LE</td>
+<td>2</td>
+<td>Seconds between taking the position and sending this frame</td>
+</tr>
+<tr>
+<td>↳ lat, lon</td>
+<td>i24, i24</td>
+<td>6</td>
+<td>As §5.1</td>
+</tr>
+<tr>
+<td>↳ alt</td>
+<td>i16 LE</td>
+<td>2 if ALT</td>
+<td>Metres, as §5.1</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Validation:</strong> a count of 0 or more than 8, ages that do not strictly fall, or any byte after the last entry give <code>bad field</code>; ambiguity 5-7 gives <code>bad field</code>; a reserved hflags bit gives <code>unknown flag</code>; a frame cut short gives <code>short frame</code> (§9.5).</li>
+<li><strong>No tail.</strong> The entries repeat to the end of the blob, so this subtype has no comment. Course and speed are left out: the gaps it fills are a minute or two long, and the APRS map draws the track between the points.</li>
+<li><strong>Size:</strong> 4 + 8 or 10 bytes per entry after the header. The largest frame, 8 entries with altitude and K, is N = 97: 7 AES blocks and 117 bytes on air, about 800 ms at SF8. A station sends one per return to coverage, not one per beacon.</li>
+<li><strong>Why this layout:</strong> absolute i24 positions reuse §5.1 exactly, and one entry stands alone if the others are dropped. A u16 age in seconds covers the 1800 s limit with room to spare, and is exact before the gateway truncates to the minute.</li>
+</ul>
+<p><strong>Example.</strong> VK4ABC-12, K, bicycle <code>/b</code>, ALT, three entries 300, 240 and 180 s old, seq 0x30 (vector <code>hst-001</code>):</p>
+<pre><code>00: 50 0A 30 B1 29 F6 53 5D 8E 02 F9 52 3D 2F 62 01
+10: 03 2C 01 35 EF D8 14 D1 6C 2D 00 F0 00 F5 E8 D8
+20: C4 D5 6C 2E 00 B4 00 B5 E2 D8 74 DA 6C 2F 00
+</code></pre>
+<p>N = 47 (4 AES blocks), 69 bytes on air. Received at 2026-10-29 10:30:00 UTC by VK4XXX-10, it gives:</p>
+<pre><code>VK4ABC-12&gt;APZKPG,qAO,VK4XXX-10:/291025z2728.08S/15301.41Eb/A=000148
+VK4ABC-12&gt;APZKPG,qAO,VK4XXX-10:/291026z2729.11S/15302.95Eb/A=000151
+VK4ABC-12&gt;APZKPG,qAO,VK4XXX-10:/291027z2730.14S/15304.50Eb/A=000154
+</code></pre>
+<p><strong>Gateway conversion</strong></p>
+<ul>
+<li><strong>One line per entry</strong>, in frame order (oldest first): <code>SRC&gt;TOCALL,qAO,IGATE:</code>, then <code>/</code> (<code>@</code> when MSG is set), the timestamp, the uncompressed position with the frame's symbol and ambiguity, and <code>/A=</code> when ALT is set. There is no comment. The rules of §10.3 apply.</li>
+<li><strong>Timestamp:</strong> <code>t = ⌊receive time in ms / 1000⌋ − age</code>, written as the APRS zulu day-hours-minutes timestamp <code>DDHHMMz</code> of t in UTC, truncated to the minute.</li>
+<li><strong>Entries not gated:</strong> an entry whose age is 0 or over 1800 is dropped (<code>stale</code>), and one at exactly 0,0 (<code>0,0</code>). The others are still gated. A frame with no entry left is dropped as <code>stale</code>.</li>
+<li><strong>Same rules as a live position.</strong> Trust (§4.3) and steps 1-5 of §10.1 apply to the frame. Any per-station rule a gateway applies to live positions, such as a privacy zone, a blocklist or a plausibility check, <span class="kw">MUST</span> also be applied to each entry.</li>
+<li><strong>Behind the live track</strong> (decision <a href="spec/decisions/0032-late-track-history-entries.md">0032</a>):<ul>
+<li>A gateway <span class="kw">MUST NOT</span> gate an entry whose position, in exact i24 units, is one it gated live (subtype 0x00 or 0x09) for the same station in the last 1800 s. The entry is dropped as <code>duplicate</code>. Its retry reached the gateway, but the station heard no echo.</li>
+<li>A gateway <span class="kw">SHOULD NOT</span> gate an entry older than the newest live position it has gated for that station. The entry is logged (§10.4) as <code>late</code>, not sent, because a map that draws positions in arrival order would put a spike back along the track.</li>
+<li>Entries newer than every live position the gateway has gated are gated, so a long hole is still filled.</li>
+</ul>
+</li>
+<li><strong>Live state untouched.</strong> Entries are older than the station's live position. A gateway <span class="kw">MUST NOT</span> let them change the state it keeps for live positions: the per-station interval of subtype 0x00, any jump or plausibility reference, and the station's last known position. A gateway <span class="kw">MAY</span> check entries against each other. The track history frame itself goes through replay (§9.3.1) and duplicate suppression (§10.2) under its own seq, like any frame.</li>
+<li><strong>Limits:</strong> the frame has its own per-station interval key (source, 0x0A) at step 6; entries are not held by the interval against each other or against live positions. Each line takes its own token at step 8, so a full frame uses 8 of the burst of 10 (decision <a href="spec/decisions/0029-gate-abuse-baseline.md">0029</a>), and waits for them like any frame.</li>
+<li><strong>Rendering is deterministic</strong> (§10.3): gateways that hear the frame within the same minute produce identical lines, which APRS-IS merges. Copies either side of a minute boundary can give two lines, as for objects.</li>
+</ul>
+<p><strong>Why <code>DDHHMMz</code>.</strong> APRS has three timestamp formats (APRS12c ch. 6 p.22; <code>research/aprs-facts.md</code>):</p>
+<ul>
+<li><strong>DHM zulu</strong> (<code>DDHHMMz</code>) carries the day, so an entry from just before midnight UTC is still right. APRS recommends sending only zulu times on air, and §8.2 objects already use it.</li>
+<li><strong>HMS</strong> (<code>HHMMSSh</code>) has no day, and its seconds would differ between gateways whose receive times differ by a second or two, so APRS-IS could not merge their copies.</li>
+<li><strong>MDHM</strong> is for positionless weather only.</li>
+</ul>
+<p><strong>On aprs.fi.</strong> A timestamped report "may possibly be (very) old" (APRS12c ch. 6 p.23), and aprs.fi uses timestamps to keep delayed packets out of a station's track. Under the rule above, an entry that is gated is newer than every live position the gateway has sent for that station, so it lands at the end of the track, not behind it. Entries held as <code>late</code> stay in the gateway's own log (§10.4), which keeps the full track.</p>
 <hr />
 <h2 id="6-messaging">6. Messaging</h2>
 <h3 id="61-message-subtype-0x01">6.1 Message (subtype 0x01)</h3>
@@ -834,7 +957,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <td>mask</td>
 <td>u8</td>
 <td>1</td>
-<td>bits 0-4: A1-A5 present; bit 7: digital byte present; bits 5-6 reserved</td>
+<td>bits 0-4: A1-A5 present; bit 5: H, the gateway fills in its hop count (§7.4); bit 7: digital byte present; bit 6 reserved</td>
 </tr>
 <tr>
 <td>A1..A5</td>
@@ -867,6 +990,16 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <li>A station <span class="kw">SHOULD</span> send its definitions (or profile ID) when it starts, when they change and in reply to query 0x04. It <span class="kw">SHOULD NOT</span> repeat unchanged definitions more often than every 6 h, and a battery station <span class="kw">SHOULD</span> repeat them every 12 h (decision <a href="spec/decisions/0028-rare-status-and-definitions.md">0028</a>). APRS-IS clients keep a station's last definitions, so a repeat only serves a gateway that started since.</li>
 <li>A gateway passes a station's definitions on to APRS-IS as received. Until it has received them, it gates the values only, which APRS shows unscaled.</li>
 <li>Analog values are 8-bit (decision <a href="spec/decisions/0021-wire-format-fixed.md">0021</a>). Wider values may come later as a new kind from the reserved range.</li>
+</ul>
+<h3 id="74-hop-count-h">7.4 Hop count (H)</h3>
+<p>A station can't know how many repeaters carried a frame to a gateway; only the gateway can see that, in the MeshCore path length. With <strong>H</strong> set (mask bit 5, values only), the station asks each gateway to fill in that number (decision <a href="spec/decisions/0031-gateway-hop-count.md">0031</a>).</p>
+<ul>
+<li>The station <span class="kw">MUST</span> leave at least one of A1-A5 out of the mask when it sets H. A frame with H and all five analogs is dropped (<code>bad field</code>).</li>
+<li>The gateway writes its hop count into the <strong>first</strong> analog slot the mask leaves out, as a raw value: the number of repeater hops in the path of the copy it gated, 0-63, with 0 for a copy heard direct (MeshCore path length 0xFF, "came direct", included).</li>
+<li>A gateway that doesn't know the hop count leaves the slot empty, as for any absent analog.</li>
+<li>The station's definitions <span class="kw">SHOULD</span> give the slot the equation <code>0,1,0</code> and a unit such as <code>hops</code>.</li>
+<li><strong>Different gateways now produce different lines for one frame,</strong> because each sees its own path. APRS-IS's duplicate filter merges only identical lines, so the station accepts one line per gateway that hears it. This is the one exception to §10.3's same-output rule, and the station opts into it.</li>
+<li>Each gateway still sends one line per (originator, seq) (§10.2): the copy it gated first, which is normally the one with the fewest hops.</li>
 </ul>
 <hr />
 <h2 id="8-weather-objects-neighbours-and-status">8. Weather, objects, neighbours and status</h2>
@@ -1189,7 +1322,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <td>code</td>
 <td>u8</td>
 <td>1</td>
-<td>bits 0-3 status code (below); bits 4-6 reserved; bit 7 = position follows</td>
+<td>bits 0-3 status code (below); bit 4: H, the gateway adds its hop count (below); bits 5-6 reserved; bit 7 = position follows</td>
 </tr>
 <tr>
 <td>lat, lon</td>
@@ -1228,6 +1361,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <ul>
 <li>Code 8 becomes <code>&gt;text</code>. A position in a code 8 frame is not rendered (decision <a href="spec/decisions/0017-rendering-gaps.md">0017</a>).</li>
 <li>Codes 0-7 and 9 with a position become a position report with the symbol <code>/&gt;</code> (the frame carries none; decision <a href="spec/decisions/0017-rendering-gaps.md">0017</a>), whose comment starts with the code's name in capitals, for example <code>!2728.08S/15301.41E&gt;EMERGENCY Vehicle rollover</code> (46 bytes). Without a position they become <code>&gt;NAME text</code>.<ul>
+<li>With <strong>H</strong> (bit 4), the gateway adds a space and its hop count (as in §7.4: 0-63, 0 for heard direct) to the end of the text before the rules above. For example, text "Hop count" heard over 2 repeaters becomes <code>&gt;Hop count 2</code>. A gateway that doesn't know the hop count renders the text alone. The §7.4 note on different lines per gateway applies.</li>
 <li><strong>UNVERIFIED:</strong> whether APRS clients recognise an emergency outside Mic-E at all. Mic-E carries emergency in the destination field, which MeshPRS drops (§1.2). The comment prefix makes the emergency readable by people, though APRS software may not flag it (decision <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>).</li>
 </ul>
 </li>
@@ -1303,6 +1437,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <li>Telemetry values <span class="kw">MUST</span> fit N ≤ 29 (at most 22 with K).</li>
 <li>A position beacon with its normal settings <span class="kw">MUST</span> fit N ≤ 45, and <span class="kw">SHOULD</span> fit N ≤ 29. A longer comment is allowed occasionally (§5.1).</li>
 <li>Weather and neighbour frames <span class="kw">SHOULD</span> fit N ≤ 29.</li>
+<li>A track history is at most N = 97 by its layout (8 entries with altitude and K, §5.8).</li>
 <li>A message is 16 bytes plus its text (20 with K): it fits N ≤ 45 for up to 29 characters, and longer text up to 67 characters is allowed (§6.4).</li>
 </ul>
 </li>
@@ -1388,7 +1523,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 </tbody>
 </table></div>
 <p>The two flags share one 2-bit field instead of two bits because they are mutually exclusive outcomes of one decision (where the frame may go). "Test but may go live" and "do not gate but test" mean nothing, so a field rules out the contradictory combinations, and the fourth value is spare for a later rule.</p>
-<p><strong>Retry (2 bits).</strong> 0 on the first send of a frame, incremented on each retransmission of that same frame. Stations retry a message at most twice (§6.3) and a plain status once (§8.4), and gateways re-inject at most twice (§6.5), so value 3 is never sent in 1.0; receivers treat it like any other retry.</p>
+<p><strong>Retry (2 bits).</strong> 0 on the first send of a frame, incremented on each retransmission of that same frame. Stations retry a message at most twice (§6.3), a plain status once (§8.4) and a position once (§5.7), and gateways re-inject at most twice (§6.5), so value 3 is never sent in 1.0; receivers treat it like any other retry.</p>
 <ul>
 <li>Every other byte of a retry is identical to the original, seq included.</li>
 <li>The retry field exists because repeaters' duplicate table hashes only the payload (F§2.4), and on the SEQ mesh it remembers a payload for about 2.7 h at measured load (SA-8, <code>../design/reliability.md</code>). Without the field, a retry would never get past the nodes that carried the first copy.</li>
@@ -1503,7 +1638,12 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <td>§8.4</td>
 </tr>
 <tr>
-<td>0x0A-0xDF</td>
+<td>0x0A</td>
+<td>Track history</td>
+<td>§5.8</td>
+</tr>
+<tr>
+<td>0x0B-0xDF</td>
 <td>Reserved for future standard use</td>
 <td></td>
 </tr>
@@ -1546,7 +1686,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <td><code>bad callsign</code></td>
 </tr>
 <tr>
-<td>Subtype 0xFF, or reserved 0x0A-0xDF not implemented</td>
+<td>Subtype 0xFF, or one from 0x0A-0xDF that the receiver does not implement</td>
 <td><code>unknown subtype</code></td>
 </tr>
 <tr>
@@ -1559,7 +1699,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <ul>
 <li><strong>Experimental subtypes:</strong> subtypes 0xE0-0xFE <span class="kw">MAY</span> be used by private agreement. A conforming gateway <span class="kw">MUST NOT</span> gate them to APRS-IS (<code>experimental subtype</code>).</li>
 <li><strong>Unknown subtypes:</strong> a receiver <span class="kw">MUST NOT</span> gate or answer a subtype it does not implement. It <span class="kw">MAY</span> show or log it.</li>
-<li><strong>Field order:</strong> every subtype lays out its fields in this order: fixed fields, then optional fields in the order of their flag bits, then at most one variable tail (comment or text) running to the end of the blob. New optional fields may only use flag bits that are reserved now, and sit before the tail.</li>
+<li><strong>Field order:</strong> every subtype lays out its fields in this order: fixed fields, then optional fields in the order of their flag bits, then at most one variable tail (comment or text) running to the end of the blob. New optional fields may only use flag bits that are reserved now, and sit before the tail. The track history (§5.8) has no tail: its entries repeat to the end of the blob, each laid out by the same rule.</li>
 <li><strong>Reserved flag set:</strong> a receiver that finds a reserved flag set in a subtype's flags or mask byte cannot find the tail. It <span class="kw">MAY</span> use the fields before that point, <span class="kw">MUST NOT</span> gate the frame, and <span class="kw">SHOULD</span> count it (<code>unknown flag</code>).</li>
 <li><strong>Integers:</strong> all multi-byte integers are little-endian two's complement, except callsigns (§4.1).</li>
 </ul>
@@ -1616,9 +1756,9 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <li><strong>Trust</strong> (§4.3): <code>untrusted</code>, <code>no key</code>, <code>key mismatch</code>, <code>unknown ack</code>.</li>
 <li><strong>Replay</strong> (§9.3.1): <code>replayed</code>. <strong>Validity</strong>, for subtypes with a position: <code>no fix</code>, <code>out of range</code>, <code>0,0</code>, <code>stale</code>, and <code>replayed (older advert)</code> for adverts.</li>
 <li><strong>Duplicate suppression</strong> (§10.2): <code>duplicate</code>.</li>
-<li><strong>Per-station interval</strong>, kept per station and service: the key is (source, subtype), plus the telemetry kind for telemetry and the object name for objects (decision <a href="spec/decisions/0018-interval-per-service.md">0018</a>). A gateway <span class="kw">MUST NOT</span> gate more than one frame per key per <strong>5 s</strong>. Messages, acks and emergencies (codes 7 and 9) are exempt: <code>interval</code>.</li>
+<li><strong>Per-station interval</strong>, kept per station and service: the key is (source, subtype), plus the telemetry kind for telemetry and the object name for objects (decision <a href="spec/decisions/0018-interval-per-service.md">0018</a>). A gateway <span class="kw">MUST NOT</span> gate more than one frame per key per <strong>5 s</strong>. Messages, acks and emergencies (codes 7 and 9) are exempt: <code>interval</code>. A track history is one frame here, under its own key (source, 0x0A); its entries are not held against each other or against live positions (§5.8).</li>
 <li><strong>Queue and jitter</strong> (a bounded queue with a random delay of 0-5 s, so gateways hearing one frame don't all send at once): <code>queue full</code>.</li>
-<li><strong>Global rate limit:</strong> a token bucket of <strong>1 line per 1 s, burst 10</strong>. A frame that would exceed it waits in the queue, but at most 10 s: <code>rate</code>.</li>
+<li><strong>Global rate limit:</strong> a token bucket of <strong>1 line per 1 s, burst 10</strong>. Each APRS-IS line takes one token, so a track history takes one per entry it gates (§5.8). A frame that would exceed it waits in the queue, but at most 10 s: <code>rate</code>.</li>
 <li><strong>Maximum hold:</strong> a frame not sent within <strong>15 s</strong> of its receipt <span class="kw">MUST</span> be dropped (<code>expired</code>).<ul>
 <li>The figure is jitter (5 s) plus the longest wait (10 s).</li>
 <li>It keeps every gateway's line for one frame inside APRS-IS's 30 s duplicate window (F§4.6), so copies still merge.</li>
@@ -1629,14 +1769,14 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <p>The numbers are decision <a href="spec/decisions/0029-gate-abuse-baseline.md">0029</a>'s. APRS-IS does not rate-limit senders, so steps 6 and 8 are not there for APRS-IS: they are a baseline that stops a broken or hostile station, or a gateway bug, from turning into an unbounded stream of lines. Step 9 does rest on APRS-IS, through its duplicate window. What a station puts on air is bounded separately, by the airtime budget (decision <a href="spec/decisions/0011-airtime-budget.md">0011</a>, §5.5).</p>
 <h3 id="102-duplicates">10.2 Duplicates</h3>
 <ul>
-<li><strong>Mesh side:</strong> the duplicate key is (originator identity, seq) (§9.3), <strong>ignoring the retry field</strong>. Subtype is not part of the key, because one counter covers every subtype. A gateway <span class="kw">MUST</span> treat a frame matching a key it accepted in the last 10 min as a duplicate (<code>duplicate</code>), so all retries of one frame give at most one APRS-IS line. The check belongs where the APRS-IS line is sent, so a restarted or second front end on the same connection can't send a frame twice (decision <a href="spec/decisions/0028-rare-status-and-definitions.md">0028</a>). The 127-frames-per-10-minutes limit (§9.3.1) keeps the key unambiguous.</li>
+<li><strong>Mesh side:</strong> the duplicate key is (originator identity, seq) (§9.3), <strong>ignoring the retry field</strong>. Subtype is not part of the key, because one counter covers every subtype. A gateway <span class="kw">MUST</span> treat a frame matching a key it accepted in the last 10 min as a duplicate (<code>duplicate</code>), so all retries of one frame give at most one APRS-IS line. That covers position retries (§5.7) and a track history, whose entries share their frame's seq (§5.8). The check belongs where the APRS-IS line is sent, so a restarted or second front end on the same connection can't send a frame twice (decision <a href="spec/decisions/0028-rare-status-and-definitions.md">0028</a>). The 127-frames-per-10-minutes limit (§9.3.1) keeps the key unambiguous.</li>
 <li><strong>APRS side:</strong> a gateway <span class="kw">MUST NOT</span> send an APRS line with the same source, destination and info as one it sent in the last 30 s, which is the APRS-IS window (F§4.6).</li>
 </ul>
 <h3 id="103-deterministic-output-normative">10.3 Deterministic output (normative)</h3>
 <p>APRS-IS removes duplicates only when source, destination and info match (F§4.6). So that several gateways hearing one flood collapse into one APRS-IS packet, every gateway <span class="kw">MUST</span> render a given frame to the same bytes. Hence:</p>
 <ul>
 <li><strong>One tocall:</strong> all MeshPRS gateways <span class="kw">MUST</span> use the same tocall (§11).</li>
-<li><strong>Output from the frame alone:</strong> the callsign-SSID claim, symbol and comment are all taken from the frame (§5.1). A gateway's local lists decide <em>whether</em> it gates, never <em>what</em> it emits.</li>
+<li><strong>Output from the frame alone:</strong> the callsign-SSID claim, symbol and comment are all taken from the frame (§5.1). A gateway's local lists decide <em>whether</em> it gates, never <em>what</em> it emits. The one exception is a hop count the station asks for with H (§7.4, §8.4).</li>
 <li><strong>Fixed rendering rules</strong> for every field, below. They are written in integer arithmetic, where <code>⌊x⌋</code> is floor division, so that floating-point rounding cannot differ between implementations.</li>
 </ul>
 <p><strong>The rendering rules</strong> (the script check is in Annex A):</p>
@@ -1718,7 +1858,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 </tr>
 <tr>
 <td>Timestamps</td>
-<td>Objects per §8.2: the frame's TS when plausible, otherwise receive time, truncated to the minute</td>
+<td>Objects per §8.2: the frame's TS when plausible, otherwise receive time, truncated to the minute. Track history entries per §5.8: receive time minus the entry's age, <code>DDHHMMz</code>, truncated to the minute</td>
 </tr>
 <tr>
 <td>Telemetry</td>
@@ -1793,7 +1933,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <ul>
 <li><strong>Radio:</strong> MBUG settings: 923.125 MHz, BW 62.5 kHz, SF8, CR 4/5, <code>path.hash.mode 1</code> (2-byte hashes), <code>multi.acks 1</code>, <code>flood.advert.interval 83</code> (F§5.4).</li>
 <li><strong>Adverts:</strong> MeshPRS does not change advert behaviour.</li>
-<li><strong>Airtime:</strong> MBUG gives no numeric budget, so MeshPRS sets one (decisions <a href="spec/decisions/0011-airtime-budget.md">0011</a>, <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>). Meanwhile the smart-beaconing minimums (§5.5), the query back-off (§6.7) and the report interval (§8.3) bound a station's output.</li>
+<li><strong>Airtime:</strong> MBUG gives no numeric budget, so MeshPRS sets one (decisions <a href="spec/decisions/0011-airtime-budget.md">0011</a>, <a href="spec/decisions/0024-emergency-beaconing-bulletins.md">0024</a>, <a href="spec/decisions/0033-daily-airtime-budget.md">0033</a>): per node, at most 144 flooded frames and 240 s of own transmit time per 24 h, burst 3. Meanwhile the smart-beaconing minimums (§5.5), the query back-off (§6.7) and the report interval (§8.3) bound a station's output.</li>
 </ul>
 <hr />
 <h2 id="13-regulatory-considerations">13. Regulatory considerations</h2>
@@ -1863,7 +2003,7 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 </ul>
 <hr />
 <h2 id="15-conformance">15. Conformance</h2>
-<p>MeshPRS 1.0 requires the subtypes position (0x00), message (0x01), ack (0x02), telemetry (0x03), object/item (0x05) and status (0x09); weather (0x04), bulletin (0x06) and neighbour report (0x08) are optional, and query (0x07) must be parsed but need not be answered (decision <a href="spec/decisions/0007-scope-1-0.md">0007</a>). The profiles:</p>
+<p>MeshPRS 1.0 requires the subtypes position (0x00), message (0x01), ack (0x02), telemetry (0x03), object/item (0x05) and status (0x09); weather (0x04), bulletin (0x06), neighbour report (0x08) and track history (0x0A) are optional, and query (0x07) must be parsed but need not be answered (decision <a href="spec/decisions/0007-scope-1-0.md">0007</a>). The profiles:</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -2037,18 +2177,23 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 </tr>
 <tr>
 <td><code>0,0</code></td>
-<td>§5.3</td>
-<td>Profile 0 validity check</td>
+<td>§5.3, §5.8</td>
+<td>Profile 0 validity check; a track history entry at 0,0</td>
 </tr>
 <tr>
 <td><code>stale</code></td>
-<td>§5.3</td>
-<td>Profile 0 validity check</td>
+<td>§5.3, §5.8</td>
+<td>Profile 0 validity check; a track history entry aged 0 or over 1800 s, or a track history with no entry left</td>
 </tr>
 <tr>
 <td><code>duplicate</code></td>
-<td>§10.2, §6.5</td>
-<td>Same (identity, seq) within 10 min, or an extra APRS retry</td>
+<td>§10.2, §6.5, §5.8</td>
+<td>Same (identity, seq) within 10 min, an extra APRS retry, or a track history entry already gated live</td>
+</tr>
+<tr>
+<td><code>late</code></td>
+<td>§5.8</td>
+<td>A track history entry older than the newest live position gated for its station (logged, not sent)</td>
 </tr>
 <tr>
 <td><code>interval</code></td>
@@ -2292,6 +2437,24 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <td></td>
 <td></td>
 </tr>
+<tr>
+<td>0x0A Track history, K + alt, 3 entries (example)</td>
+<td>47</td>
+<td>69</td>
+<td>36 per entry</td>
+<td>67 per entry</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>0x0A Track history, K + alt, 8 entries</td>
+<td>97</td>
+<td>117</td>
+<td>36 per entry</td>
+<td>67 per entry</td>
+<td></td>
+<td></td>
+</tr>
 </tbody>
 </table></div>
 <p><strong>Text on air</strong> is <code>5 + 16·⌈(5 + L)/16⌉</code> for L bytes of <code>name: text</code> (4-byte timestamp + 1-byte type + text; the NUL is not counted, F§1.4).</p>
@@ -2396,6 +2559,26 @@ The first four mirror the IS → RF rules (F§4.6). The fifth stops loops.</li>
 <tr>
 <td><a href="spec/decisions/0029-gate-abuse-baseline.md">0029</a></td>
 <td>Gate-side limits: 5 s per station and service, 1 line per 1 s with a burst of 10, against abuse and bugs</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0030-position-retry-and-track-history.md">0030</a></td>
+<td>One position retry 40-50 s after a missed echo; track history (0x0A) gated as timestamped positions</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0031-gateway-hop-count.md">0031</a></td>
+<td>H flag: the gateway fills in its hop count, in telemetry and status</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0032-late-track-history-entries.md">0032</a></td>
+<td>A track history entry behind the live track, or already sent live, is not gated</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0033-daily-airtime-budget.md">0033</a></td>
+<td>The per-node airtime budget is a 24 h average; a moving station beacons at its §5.5 rate inside it</td>
+</tr>
+<tr>
+<td><a href="spec/decisions/0034-move-threshold-500m.md">0034</a></td>
+<td>The smart-beaconing move threshold default is 500 m</td>
 </tr>
 </tbody>
 </table></div>

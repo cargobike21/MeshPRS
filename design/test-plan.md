@@ -201,7 +201,7 @@ Measured over T6 (the live mesh with a private aprsc), with at least 2 iGates an
 | P4 | Duplicates passed by APRS-IS per `(src, seq)` | exactly 1, in 100 % of frames | all |
 | P5 | Duplicate submissions by one iGate | 0 | all |
 | P6 | Loops | 0 | all |
-| P7 | MeshPRS airtime | within the reliability.md §4.4 budget per node and per iGate; ≤ 2 % added occupancy at each logged repeater, from `GET_STATUS` deltas | daily |
+| P7 | MeshPRS airtime | within the reliability.md §4.4 budget per node (per 24 h, decision 0033) and per iGate; ≤ 2 % added occupancy at each logged repeater, from `GET_STATUS` deltas | daily |
 | P8 | Latency, mesh → APRS-IS, ≤ 3 hops | p95 ≤ 10 s | all delivered |
 | P9 | No harm to other mesh traffic | logged repeaters' flood, dupe and error counters show no step change beyond normal day-to-day variation (baseline from §5.6) | before vs during |
 | P10 | Vectors | the trial build passes 100 % of the T1 vectors | — |

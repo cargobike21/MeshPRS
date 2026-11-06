@@ -12,3 +12,4 @@ Each fact with its source. Add to this as the spec needs more. Don't re-derive w
 | A wrong repeater password gets silence, not a refusal | `meshrepeaters.js` header |
 | *(payload size limits: to check against firmware)* | |
 | *(CayenneLPP channel / type list used by common sensors: to check)* | |
+| A station hears its own flooded packet when a repeater relays it ("echo"): MeshCore calls `logRx` for every received packet before its duplicate check, and the relayed copy has the same packet hash (payload only, F§2.4) though its path is longer. Used as first-hop proof for the spec §5.7 position retry and §5.8 track history | `tools/mesh-buddy/main.cpp` `logRx` / `closeEcho` (MeshCore companion-v1.18.0 `Dispatcher.cpp` checkRecv); Echo% telemetry on the 2026-11-04 rides |
